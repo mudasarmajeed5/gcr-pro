@@ -1,7 +1,5 @@
 "use client"
-
 import { FaGithub } from "react-icons/fa"
-import { ModeToggle } from "./mode-toggle"
 import Link from "next/link"
 export default function Footer() {
   return (
@@ -10,7 +8,6 @@ export default function Footer() {
         
         {/* Theme Switch */}
         <div className="flex items-center gap-2">
-          <ModeToggle />
           <span className="text-sm text-muted-foreground">Switch Theme</span>
         </div>
 
