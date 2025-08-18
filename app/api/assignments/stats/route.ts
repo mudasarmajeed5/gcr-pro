@@ -1,7 +1,8 @@
-// app/api/assignments/stats/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000;
 
 interface Assignment {
     id: string;
@@ -35,12 +36,30 @@ interface StudentSubmission {
     state: string;
     late: boolean;
     assignedGrade?: number;
+    courseWorkId: string; // This links submission to assignment
 }
 
 interface Course {
     id: string;
     name: string;
     courseState: string;
+}
+
+// Cache helper functions
+function getCached(key: string) {
+    const cached = cache.get(key);
+    if (!cached) return null;
+    
+    if (Date.now() - cached.timestamp > CACHE_DURATION) {
+        cache.delete(key);
+        return null;
+    }
+    
+    return cached.data;
+}
+
+function setCache(key: string, data: any) {
+    cache.set(key, { data, timestamp: Date.now() });
 }
 
 export async function GET(_request: NextRequest) {
@@ -54,14 +73,23 @@ export async function GET(_request: NextRequest) {
             );
         }
 
-        // Fetch all courses first
+        const cacheKey = `stats-${session.user?.id || 'user'}`;
+        const cachedStats = getCached(cacheKey);
+        if (cachedStats) {
+            return NextResponse.json(cachedStats);
+        }
+
+        // Optimized headers for all requests
+        const headers = {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Accept-Encoding': 'gzip',
+            'Accept': 'application/json',
+        };
+
+        // Fetch courses with field filtering
         const coursesResponse = await fetch(
-            "https://classroom.googleapis.com/v1/courses?studentId=me&courseStates=ACTIVE",
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            }
+            "https://classroom.googleapis.com/v1/courses?studentId=me&courseStates=ACTIVE&fields=courses(id,name,courseState)&pageSize=1000",
+            { headers }
         );
 
         if (!coursesResponse.ok) {
@@ -71,72 +99,48 @@ export async function GET(_request: NextRequest) {
         const coursesData = await coursesResponse.json();
         const courses: Course[] = coursesData.courses || [];
 
-        // Fetch assignments for all courses in parallel
-        const courseAssignmentsPromises = courses.map(async (course) => {
+        // Fetch assignments AND submissions for all courses in parallel
+        const courseDataPromises = courses.map(async (course) => {
             try {
-                const assignmentsResponse = await fetch(
-                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.accessToken}`,
-                        },
-                    }
-                );
+                // Make both requests in parallel for each course
+                const [assignmentsResponse, submissionsResponse] = await Promise.all([
+                    // Get assignments
+                    fetch(
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints)&pageSize=1000`,
+                        { headers }
+                    ),
+                    // Get ALL submissions for this course at once (KEY OPTIMIZATION!)
+                    fetch(
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late)&pageSize=1000`,
+                        { headers }
+                    )
+                ]);
 
-                if (!assignmentsResponse.ok) {
-                    console.warn(`Failed to fetch assignments for course ${course.id}`);
-                    return { courseId: course.id, assignments: [] };
+                let assignments = [];
+                let submissions = [];
+
+                if (assignmentsResponse.ok) {
+                    const assignmentsData = await assignmentsResponse.json();
+                    assignments = assignmentsData.courseWork || [];
                 }
 
-                const assignmentsData = await assignmentsResponse.json();
+                if (submissionsResponse.ok) {
+                    const submissionsData = await submissionsResponse.json();
+                    submissions = submissionsData.studentSubmissions || [];
+                }
+
                 return {
                     courseId: course.id,
-                    assignments: assignmentsData.courseWork || []
+                    assignments,
+                    submissions
                 };
             } catch (error) {
                 console.warn(`Failed to process course ${course.id}:`, error);
-                return { courseId: course.id, assignments: [] };
+                return { courseId: course.id, assignments: [], submissions: [] };
             }
         });
 
-        const courseAssignments = await Promise.all(courseAssignmentsPromises);
-
-        // Flatten all assignments with course context
-        const allAssignments = courseAssignments.flatMap(({ courseId, assignments }) =>
-            assignments.map((assignment: any) => ({ ...assignment, courseId }))
-        );
-
-        // Fetch submissions for all assignments in parallel
-        const submissionPromises = allAssignments.map(async (assignment) => {
-            try {
-                const submissionsResponse = await fetch(
-                    `https://classroom.googleapis.com/v1/courses/${assignment.courseId}/courseWork/${assignment.id}/studentSubmissions?userId=me`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.accessToken}`,
-                        },
-                    }
-                );
-
-                if (!submissionsResponse.ok) {
-                    return { assignmentId: assignment.id, submission: null, assignment };
-                }
-
-                const submissionsData = await submissionsResponse.json();
-                const submissions: StudentSubmission[] = submissionsData.studentSubmissions || [];
-
-                return {
-                    assignmentId: assignment.id,
-                    submission: submissions.length > 0 ? submissions[0] : null,
-                    assignment
-                };
-            } catch (error) {
-                console.warn(`Failed to fetch submission for assignment ${assignment.id}:`, error);
-                return { assignmentId: assignment.id, submission: null, assignment };
-            }
-        });
-
-        const submissionResults = await Promise.all(submissionPromises);
+        const courseData = await Promise.all(courseDataPromises);
 
         // Process results
         let totalAssignments = 0;
@@ -148,33 +152,40 @@ export async function GET(_request: NextRequest) {
 
         const now = new Date();
 
-        for (const { submission, assignment } of submissionResults) {
-            totalAssignments++;
-            const isOverdue = checkIfOverdue(assignment, now);
+        // Process each course's data
+        courseData.forEach(({ assignments, submissions }) => {
+            // Create a map of submissions by courseWorkId for quick lookup
+            const submissionMap = new Map();
+            submissions.forEach((submission: StudentSubmission) => {
+                submissionMap.set(submission.courseWorkId, submission);
+            });
 
-            if (submission) {
-                if (submission.state === 'TURNED_IN' || submission.state === 'RETURNED') {
-                    turnedIn++;
+            // Process each assignment
+            assignments.forEach((assignment: Assignment) => {
+                totalAssignments++;
+                const submission = submissionMap.get(assignment.id);
+                const isOverdue = checkIfOverdue(assignment, now);
 
-                    // Only add points if graded
-                    if (submission.assignedGrade !== undefined && submission.assignedGrade !== null) {
-                        earnedPoints += submission.assignedGrade;
-                        totalPoints += assignment.maxPoints || 0;
+                if (submission) {
+                    if (submission.state === 'TURNED_IN' || submission.state === 'RETURNED') {
+                        turnedIn++;
+
+                        // Only add points if graded
+                        if (submission.assignedGrade !== undefined && submission.assignedGrade !== null) {
+                            earnedPoints += submission.assignedGrade;
+                            totalPoints += assignment.maxPoints || 0;
+                        }
+                    } else {
+                        if (isOverdue) missed++;
+                        else unsubmitted++;
                     }
                 } else {
+                    // No submission found
                     if (isOverdue) missed++;
-                    else {
-                        unsubmitted++;
-                    }
+                    else unsubmitted++;
                 }
-            } else {
-                // No submission found
-                if (isOverdue) missed++;
-                else {
-                    unsubmitted++;
-                }
-            }
-        }
+            });
+        });
 
         // Calculate percentage
         const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
@@ -188,19 +199,22 @@ export async function GET(_request: NextRequest) {
             percentage: Math.round(percentage * 10) / 10,
         };
 
+        // Cache the results
+        setCache(cacheKey, stats);
+
         return NextResponse.json(stats);
 
     } catch (error) {
         console.error("Error fetching assignment stats:", error);
         return NextResponse.json(
-            { error: "Failed to fetch assignment statistics" },
+            { error: "Failed to fetch assignment statistics, Login again" },
             { status: 500 }
         );
     }
 }
 
 // Helper function to check if assignment is overdue
-function checkIfOverdue(assignment: any, currentDate: Date): boolean {
+function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
     if (!assignment.dueDate) {
         return false;
     }

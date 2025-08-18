@@ -27,7 +27,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>
-            {children}
+            <div className="h-full">
+              {children}
+            </div>
           </SessionProvider>
         </ThemeProvider>
       </body>

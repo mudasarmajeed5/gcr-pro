@@ -98,7 +98,7 @@ export default function AssignmentsOverview() {
   }
 
   return (
-    <div className="mb-8 p-5">
+    <div className="mb-8 p-5 h-full">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
         <p className="text-muted-foreground">
@@ -138,7 +138,7 @@ export default function AssignmentsOverview() {
                 </span>
                 <Button
                   variant="link"
-                  className="p-0 text-sm"
+                  className="p-0 text-sm cursor-pointer"
                   onClick={() => handleViewDetails('graded')}
                 >
                   View Details
@@ -172,7 +172,7 @@ export default function AssignmentsOverview() {
                       </span>
                       <Button
                         variant="link"
-                        className="p-0 text-sm"
+                        className="p-0 text-sm cursor-pointer"
                         onClick={() => handleViewDetails('turnedIn')}
                       >
                         View Details
@@ -207,7 +207,7 @@ export default function AssignmentsOverview() {
                         <span className="text-orange-600 font-medium">{stats.unsubmitted}</span> assignments pending</span>
                       <Button
                         variant="link"
-                        className="p-0 text-sm"
+                        className="p-0 text-sm cursor-pointer"
                         onClick={() => handleViewDetails('unsubmitted')}
                       >
                         View Details
@@ -242,7 +242,7 @@ export default function AssignmentsOverview() {
                       </span>
                       <Button
                         variant="link"
-                        className="p-0 text-sm"
+                        className="p-0 text-sm cursor-pointer"
                         onClick={() => handleViewDetails('missed')}
                       >
                         View Details
