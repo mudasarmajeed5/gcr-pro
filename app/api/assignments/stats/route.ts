@@ -20,6 +20,9 @@ interface Assignment {
     assignedGrade?: number;
     submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RECLAIMED_BY_STUDENT';
     late?: boolean;
+    courseId: string;
+    submission?: any;
+    isOverdue?: boolean;
 }
 
 interface StudentSubmission {
@@ -36,13 +39,23 @@ interface StudentSubmission {
     state: string;
     late: boolean;
     assignedGrade?: number;
-    courseWorkId: string; // This links submission to assignment
+    courseWorkId: string;
 }
 
 interface Course {
     id: string;
     name: string;
     courseState: string;
+}
+
+interface ClassroomStats {
+    totalAssignments: number;
+    turnedIn: number;
+    unsubmitted: number;
+    missed: number;
+    totalPoints: number;
+    earnedPoints: number;
+    percentage: number;
 }
 
 // Cache helper functions
@@ -62,6 +75,28 @@ function setCache(key: string, data: any) {
     cache.set(key, { data, timestamp: Date.now() });
 }
 
+// Helper function to check if assignment is overdue
+function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
+    if (!assignment.dueDate) {
+        return false;
+    }
+
+    const dueDate = new Date(
+        assignment.dueDate.year,
+        assignment.dueDate.month - 1,
+        assignment.dueDate.day
+    );
+
+    if (assignment.dueTime) {
+        dueDate.setHours(assignment.dueTime.hours || 23);
+        dueDate.setMinutes(assignment.dueTime.minutes || 59);
+    } else {
+        dueDate.setHours(23, 59, 59, 999);
+    }
+
+    return currentDate > dueDate;
+}
+
 export async function GET(_request: NextRequest) {
     try {
         const session = await auth();
@@ -73,10 +108,10 @@ export async function GET(_request: NextRequest) {
             );
         }
 
-        const cacheKey = `stats-${session.user?.id || 'user'}`;
-        const cachedStats = getCached(cacheKey);
-        if (cachedStats) {
-            return NextResponse.json(cachedStats);
+        const cacheKey = `classroom-data-${session.user?.id || 'user'}`;
+        const cachedData = getCached(cacheKey);
+        if (cachedData) {
+            return NextResponse.json(cachedData);
         }
 
         // Optimized headers for all requests
@@ -109,9 +144,9 @@ export async function GET(_request: NextRequest) {
                         `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints)&pageSize=1000`,
                         { headers }
                     ),
-                    // Get ALL submissions for this course at once (KEY OPTIMIZATION!)
+                    // Get ALL submissions for this course at once
                     fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late)&pageSize=1000`,
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late,assignmentSubmission,submissionHistory)&pageSize=1000`,
                         { headers }
                     )
                 ]);
@@ -142,7 +177,8 @@ export async function GET(_request: NextRequest) {
 
         const courseData = await Promise.all(courseDataPromises);
 
-        // Process results
+        // Process and combine all data
+        const allAssignments: Assignment[] = [];
         let totalAssignments = 0;
         let turnedIn = 0;
         let unsubmitted = 0;
@@ -153,7 +189,7 @@ export async function GET(_request: NextRequest) {
         const now = new Date();
 
         // Process each course's data
-        courseData.forEach(({ assignments, submissions }) => {
+        courseData.forEach(({ courseId, assignments, submissions }) => {
             // Create a map of submissions by courseWorkId for quick lookup
             const submissionMap = new Map();
             submissions.forEach((submission: StudentSubmission) => {
@@ -161,11 +197,29 @@ export async function GET(_request: NextRequest) {
             });
 
             // Process each assignment
-            assignments.forEach((assignment: Assignment) => {
+            assignments.forEach((rawAssignment: any) => {
                 totalAssignments++;
-                const submission = submissionMap.get(assignment.id);
-                const isOverdue = checkIfOverdue(assignment, now);
+                const submission = submissionMap.get(rawAssignment.id);
+                const isOverdue = checkIfOverdue(rawAssignment, now);
 
+                // Create the assignment object with all necessary data
+                const assignment: Assignment = {
+                    id: rawAssignment.id,
+                    title: rawAssignment.title,
+                    dueDate: rawAssignment.dueDate,
+                    dueTime: rawAssignment.dueTime,
+                    maxPoints: rawAssignment.maxPoints,
+                    assignedGrade: submission?.assignedGrade,
+                    submissionState: submission?.state || 'NEW',
+                    late: submission?.late || false,
+                    courseId,
+                    submission: submission || null,
+                    isOverdue
+                };
+
+                allAssignments.push(assignment);
+
+                // Calculate stats
                 if (submission) {
                     if (submission.state === 'TURNED_IN' || submission.state === 'RETURNED') {
                         turnedIn++;
@@ -173,7 +227,7 @@ export async function GET(_request: NextRequest) {
                         // Only add points if graded
                         if (submission.assignedGrade !== undefined && submission.assignedGrade !== null) {
                             earnedPoints += submission.assignedGrade;
-                            totalPoints += assignment.maxPoints || 0;
+                            totalPoints += rawAssignment.maxPoints || 0;
                         }
                     } else {
                         if (isOverdue) missed++;
@@ -189,7 +243,7 @@ export async function GET(_request: NextRequest) {
 
         // Calculate percentage
         const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
-        const stats = {
+        const stats: ClassroomStats = {
             totalAssignments,
             turnedIn,
             unsubmitted,
@@ -199,38 +253,23 @@ export async function GET(_request: NextRequest) {
             percentage: Math.round(percentage * 10) / 10,
         };
 
-        // Cache the results
-        setCache(cacheKey, stats);
+        // Return comprehensive data
+        const responseData = {
+            courses,
+            assignments: allAssignments,
+            stats
+        };
 
-        return NextResponse.json(stats);
+        // Cache the results
+        setCache(cacheKey, responseData);
+
+        return NextResponse.json(responseData);
 
     } catch (error) {
-        console.error("Error fetching assignment stats:", error);
+        console.error("Error fetching classroom data:", error);
         return NextResponse.json(
-            { error: "Failed to fetch assignment statistics, Login again" },
+            { error: "Failed to fetch classroom data. Please login again." },
             { status: 500 }
         );
     }
-}
-
-// Helper function to check if assignment is overdue
-function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
-    if (!assignment.dueDate) {
-        return false;
-    }
-
-    const dueDate = new Date(
-        assignment.dueDate.year,
-        assignment.dueDate.month - 1,
-        assignment.dueDate.day
-    );
-
-    if (assignment.dueTime) {
-        dueDate.setHours(assignment.dueTime.hours || 23);
-        dueDate.setMinutes(assignment.dueTime.minutes || 59);
-    } else {
-        dueDate.setHours(23, 59, 59, 999);
-    }
-
-    return currentDate > dueDate;
 }

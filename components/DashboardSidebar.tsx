@@ -32,7 +32,7 @@ const sidebarItems = [
         label: 'Messages'
     },
     {
-        href: '/email',
+        href: '/send-email',
         icon: MailIcon,
         label: 'Send Email'
     },

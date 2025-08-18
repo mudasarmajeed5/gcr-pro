@@ -1,87 +1,75 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
-
-
+import { useClassroomStore } from "@/store/classroom-store";
 
 import {
   CheckCircle,
   Clock,
   XCircle,
-  Target
+  Target,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCardSkeleton } from "./StatCarSkeleton";
 
-interface Assignment {
-  id: string;
-  title: string;
-  dueDate?: string;
-  maxPoints?: number;
-  assignedGrade?: number;
-  submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RECLAIMED_BY_STUDENT';
-  late: boolean;
-}
-
-interface AssignmentsStats {
-  totalAssignments: number;
-  turnedIn: number;
-  unsubmitted: number;
-  missed: number;
-  totalPoints: number;
-  earnedPoints: number;
-  percentage: number;
-}
-
 export default function AssignmentsOverview() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  
+  // Get data and actions from the store
+  const {
+    courses,
+    assignments,
+    stats,
+    isLoading,
+    error,
+    fetchClassroomData,
+    refreshData,
+    shouldRefresh
+  } = useClassroomStore();
+
   const handleViewDetails = (filter: 'turnedIn' | 'unsubmitted' | 'missed' | 'graded') => {
     router.push(`/assignments?filter=${filter}`);
   };
-  const { data: session, status } = useSession();
-  const [stats, setStats] = useState<AssignmentsStats>({
-    totalAssignments: 0,
-    turnedIn: 0,
-    unsubmitted: 0,
-    missed: 0,
-    totalPoints: 0,
-    earnedPoints: 0,
-    percentage: 0
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchAssignmentsStats = async () => {
-    if (status !== "authenticated") return;
-
-    setLoading(true);
-    setError(null);
-
+  const handleRefresh = async () => {
     try {
-      const response = await fetch("/api/assignments/stats");
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch assignments stats");
-      }
-
-      setStats(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+      await refreshData();
+      console.log("Data refreshed successfully");
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
     }
   };
 
+  // Fetch data when component mounts or when user is authenticated
   useEffect(() => {
     if (status === "authenticated") {
-      fetchAssignmentsStats();
+      fetchClassroomData();
     }
-  }, [status]);
+  }, [status, fetchClassroomData]);
+
+  // Log the data for debugging (you can remove this later)
+  useEffect(() => {
+    if (courses.length > 0 || assignments.length > 0) {
+      console.log("📚 Courses loaded:", courses);
+      console.log("📝 Assignments loaded:", assignments);
+      console.log("📊 Stats:", stats);
+    }
+  }, [courses, assignments, stats]);
+
+  // Auto-refresh stale data
+  useEffect(() => {
+    if (status === "authenticated" && shouldRefresh()) {
+      console.log("Data is stale, refreshing...");
+      fetchClassroomData();
+    }
+  }, [status, shouldRefresh, fetchClassroomData]);
 
   if (!session) {
     return null; // Don't show anything if not authenticated
@@ -91,22 +79,56 @@ export default function AssignmentsOverview() {
     return (
       <div className="mb-6">
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="ml-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </AlertDescription>
         </Alert>
       </div>
     );
   }
 
+  // Use default stats if none available
+  const displayStats = stats || {
+    totalAssignments: 0,
+    turnedIn: 0,
+    unsubmitted: 0,
+    missed: 0,
+    totalPoints: 0,
+    earnedPoints: 0,
+    percentage: 0
+  };
+
   return (
     <div className="mb-8 p-5 h-full">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
-        <p className="text-muted-foreground">
-          Your academic performance at a glance
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
+          <p className="text-muted-foreground">
+            Your academic performance at a glance
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="grid grid-cols-3 gap-3 mx-auto">
           {Array.from({ length: 4 }).map((_, index) => (
             <StatCardSkeleton key={index} />
@@ -124,17 +146,17 @@ export default function AssignmentsOverview() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600 mb-3">
-                {stats.percentage.toFixed(1)}%
+                {displayStats.percentage.toFixed(1)}%
               </div>
               <div className="mb-3">
                 <Progress
-                  value={stats.percentage}
+                  value={displayStats.percentage}
                   className="h-2"
                 />
               </div>
               <p className="text-sm flex justify-between items-center text-muted-foreground">
                 <span>
-                  <span className="text-blue-600 font-medium">{stats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{stats.totalPoints}</span> points earned
+                  <span className="text-blue-600 font-medium">{displayStats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{displayStats.totalPoints}</span> points earned
                 </span>
                 <Button
                   variant="link"
@@ -157,17 +179,17 @@ export default function AssignmentsOverview() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600 mb-3">
-                {stats.turnedIn}
+                {displayStats.turnedIn}
               </div>
               <div className="py-2 bg-transparent">
               </div>
               <p className="text-sm flex justify-between items-center text-muted-foreground">
-                {stats.totalAssignments > 0
+                {displayStats.totalAssignments > 0
                   ? (
                     <>
                       <span>
                         <span className="text-green-600 font-medium">
-                          {((stats.turnedIn / stats.totalAssignments) * 100).toFixed(1)}%
+                          {((displayStats.turnedIn / displayStats.totalAssignments) * 100).toFixed(1)}%
                         </span> of assignments completed
                       </span>
                       <Button
@@ -195,16 +217,16 @@ export default function AssignmentsOverview() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-600 mb-3">
-                {stats.unsubmitted}
+                {displayStats.unsubmitted}
               </div>
               <div className="py-2 bg-transparent">
               </div>
               <p className="text-sm text-muted-foreground flex justify-between items-center">
-                {stats.unsubmitted > 0
+                {displayStats.unsubmitted > 0
                   ? (
                     <>
                       <span>
-                        <span className="text-orange-600 font-medium">{stats.unsubmitted}</span> assignments pending</span>
+                        <span className="text-orange-600 font-medium">{displayStats.unsubmitted}</span> assignments pending</span>
                       <Button
                         variant="link"
                         className="p-0 text-sm cursor-pointer"
@@ -217,7 +239,6 @@ export default function AssignmentsOverview() {
                   : 'All caught up!'
                 }
               </p>
-
             </CardContent>
           </Card>
 
@@ -231,14 +252,16 @@ export default function AssignmentsOverview() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-red-600 mb-3">
-                {stats.missed}
+                {displayStats.missed}
+              </div>
+              <div className="py-2 bg-transparent">
               </div>
               <p className="text-sm flex justify-between items-center text-muted-foreground">
-                {stats.missed > 0
+                {displayStats.missed > 0
                   ? (
                     <>
                       <span>
-                        <span className="text-red-600 font-medium">{stats.missed}</span> overdue assignments
+                        <span className="text-red-600 font-medium">{displayStats.missed}</span> overdue assignments
                       </span>
                       <Button
                         variant="link"
@@ -254,6 +277,16 @@ export default function AssignmentsOverview() {
               </p>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === 'development' && !isLoading && (
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm">
+          <h3 className="font-semibold mb-2">Debug Info:</h3>
+          <p>Courses loaded: {courses.length}</p>
+          <p>Assignments loaded: {assignments.length}</p>
+          <p>Stats available: {stats ? 'Yes' : 'No'}</p>
         </div>
       )}
     </div>

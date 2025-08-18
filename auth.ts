@@ -28,6 +28,7 @@ export const authOptions: NextAuthConfig = {
             "https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly",
             "https://www.googleapis.com/auth/classroom.announcements.readonly",
             "https://www.googleapis.com/auth/classroom.topics.readonly",
+            "https://www.googleapis.com/auth/classroom.rosters.readonly",
           ].join(" "),
           access_type: "offline", // to get a refresh token
           prompt: "consent",

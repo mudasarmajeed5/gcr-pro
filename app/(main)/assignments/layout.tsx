@@ -32,17 +32,6 @@ const AssignmentsLayout = ({ children }: AssignmentsLayoutProps) => {
         router.push(`/assignments?filter=${newFilter}`);
     }
 
-    const getFilterIcon = (filter: string) => {
-        switch (filter) {
-            case 'graded': return <CheckCircle className="h-4 w-4" />;
-            case 'turnedIn': return <BookOpen className="h-4 w-4" />;
-            case 'unsubmitted': return <Clock className="h-4 w-4" />;
-            case 'missed': return <XCircle className="h-4 w-4" />;
-            default: return <BookOpen className="h-4 w-4" />;
-        }
-    }
-
-    // Only show header on assignments page, not on sub-routes
     const showHeader = pathname === '/assignments';
 
     if (status === "loading" || status === "unauthenticated") {
