@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
 import { PanelLeft, PanelRight } from "lucide-react"
+import { MaterialPreviewModal } from "@/components/material-preview-modal"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
     <main>
+      <MaterialPreviewModal />
       <Header />
       <div className="h-[calc(100vh-70px)] relative">
         <ResizablePanelGroup direction="horizontal">

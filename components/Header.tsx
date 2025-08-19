@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { GraduationCap, LogOut, Search } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
+import GlobalSearch from "./GlobalSearch"
 
 // ✅ import the shadcn theme switcher
 
@@ -30,17 +31,7 @@ export default function Header() {
         </Link>
 
         {/* Center: Search */}
-        <div className="flex-1 max-w-lg mx-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search classes, assignments..."
-              className="pl-10"
-            />
-          </div>
-        </div>
-
+        <GlobalSearch/>
         {/* Right: Profile */}
         <div className="flex items-center gap-2">
           <ModeToggle />

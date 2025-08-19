@@ -20,6 +20,8 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "fuse.js": "^7.1.0",
     "googleapis": "^156.0.0",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",

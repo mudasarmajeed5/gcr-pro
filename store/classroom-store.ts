@@ -2,53 +2,10 @@
 import { Announcement, CourseWorkMaterial } from '@/types/all-data';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { StoreAssignment as Assignment } from '@/types/all-data';
+import { type ClassroomStats } from '@/types/all-data';
+import { type Course } from '@/types/all-data';
 
-interface Assignment {
-    id: string;
-    title: string;
-    dueDate?: {
-        year: number;
-        month: number;
-        day: number;
-    };
-    dueTime?: {
-        hours: number;
-        minutes: number;
-    };
-    maxPoints?: number;
-    assignedGrade?: number;
-    submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RETURNED';
-    late?: boolean;
-    courseId: string;
-    submission?: any;
-    isOverdue?: boolean;
-}
-
-interface Course {
-    id: string;
-    name: string;
-    section?: string;
-    descriptionHeading?: string;
-    description?: string;
-    room?: string;
-    ownerId: string;
-    creationTime: string;
-    updateTime: string;
-    enrollmentCode?: string;
-    courseState: string;
-    alternateLink: string;
-}
-
-
-interface ClassroomStats {
-    totalAssignments: number;
-    turnedIn: number;
-    unsubmitted: number;
-    missed: number;
-    totalPoints: number;
-    earnedPoints: number;
-    percentage: number;
-}
 
 interface ClassroomStore {
     // Data

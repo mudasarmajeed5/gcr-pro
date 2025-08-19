@@ -1,24 +1,18 @@
 'use client'
 
 import { CourseWorkMaterial } from '@/types/all-data';
-import { FileText, Link, Play, FileSpreadsheet, Calendar, ExternalLink, Download, Eye } from 'lucide-react';
+import { FileText, Link, Play, FileSpreadsheet, Calendar, ExternalLink, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { MouseEvent, useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import { usePreviewStore } from '@/store/preview-store';
+
 interface MaterialListProps {
     materials: CourseWorkMaterial[];
 }
 
 const MaterialList = ({ materials }: MaterialListProps) => {
-    const [previewMaterial, setPreviewMaterial] = useState<CourseWorkMaterial | null>(null);
+    const { openPreview } = usePreviewStore();
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -86,8 +80,8 @@ const MaterialList = ({ materials }: MaterialListProps) => {
             window.open(url, '_blank');
         }
     };
-    const openInNewWindow = (material: CourseWorkMaterial) => {
 
+    const openInNewWindow = (material: CourseWorkMaterial) => {
         const first = material.materials?.[0];
         if (!first) return;
         let url = '';
@@ -98,19 +92,41 @@ const MaterialList = ({ materials }: MaterialListProps) => {
 
         if (url) window.open(url, '_blank');
     };
+
     const handleMaterialClick = (material: CourseWorkMaterial) => {
         const first = material.materials?.[0];
         if (!first) return;
 
-        // For Drive files, open in preview modal instead of new tab
+        // Prepare preview material data for the modal
         if (first.driveFile) {
-            setPreviewMaterial(material);
+            openPreview({
+                title: material.title,
+                type: 'driveFile' as const,
+                url: `https://drive.google.com/file/d/${first.driveFile.driveFile.id}/preview`,
+                driveFileId: first.driveFile.driveFile.id
+            });
+        } else if (first.youtubeVideo) {
+            openPreview({
+                title: material.title,
+                type: 'youtubeVideo' as const,
+                url: first.youtubeVideo.alternateLink,
+            });
+        } else if (first.form) {
+            openPreview({
+                title: material.title,
+                type: 'form' as const,
+                url: first.form.formUrl,
+            });
+        } else if (first.link) {
+            openPreview({
+                title: material.title,
+                type: 'link' as const,
+                url: first.link.url,
+            });
         } else {
-            let url = '';
-            if (first.link) url = first.link.url;
-            else if (first.youtubeVideo) url = first.youtubeVideo.alternateLink;
-            else if (first.form) url = first.form.formUrl;
-            if (url) window.open(url, '_blank');
+            // Fallback to opening in new window if type is unknown
+            openInNewWindow(material);
+            return;
         }
     };
 
@@ -181,22 +197,6 @@ const MaterialList = ({ materials }: MaterialListProps) => {
                     </div>
                 </div>
             ))}
-
-            <Dialog open={!!previewMaterial} onOpenChange={(open) => !open && setPreviewMaterial(null)}>
-                <DialogContent className="h-screen w-screen max-w-none sm:max-w-full max-h-none rounded-none p-0">
-                    <DialogHeader className="p-4 border-b">
-                        <DialogTitle className="text-lg font-semibold">
-                            {previewMaterial?.title}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="h-[calc(100vh-4rem)]">
-                        <iframe
-                            src={`https://drive.google.com/file/d/${previewMaterial?.materials?.[0]?.driveFile?.driveFile.id}/preview`}
-                            className="w-full h-full border-0"
-                        />
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 };

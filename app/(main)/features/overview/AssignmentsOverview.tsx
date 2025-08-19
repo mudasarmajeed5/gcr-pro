@@ -21,7 +21,7 @@ import { StatCardSkeleton } from "./StatCarSkeleton";
 export default function AssignmentsOverview() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  
+
   // Get data and actions from the store
   const {
     courses,
@@ -31,7 +31,7 @@ export default function AssignmentsOverview() {
     error,
     fetchClassroomData,
     refreshData,
-    shouldRefresh, 
+    shouldRefresh,
   } = useClassroomStore();
 
   const handleViewDetails = (filter: 'turnedIn' | 'unsubmitted' | 'missed' | 'graded') => {
@@ -181,7 +181,11 @@ export default function AssignmentsOverview() {
               <div className="text-3xl font-bold text-green-600 mb-3">
                 {displayStats.turnedIn}
               </div>
-              <div className="py-2 bg-transparent">
+              <div className="mb-3">
+                <Progress
+                  value={((displayStats.turnedIn / displayStats.totalAssignments) * 100)}
+                  className="h-2"
+                />
               </div>
               <p className="text-sm flex justify-between items-center text-muted-foreground">
                 {displayStats.totalAssignments > 0

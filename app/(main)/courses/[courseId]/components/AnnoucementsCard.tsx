@@ -42,7 +42,7 @@ const AnnouncementsCard = ({ courseId }: { courseId: string }) => {
                 <CardTitle className="text-lg font-semibold">Announcements</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-                {announcements.length === 0 && <div>All good!</div>}
+                {announcements.length === 0 && <div>Nothing new, You can scroll!</div>}
                 {announcements.map((announcement) => {
                     const isExpanded = expandedAnnouncements.has(announcement.id);
                     const shouldTruncate = announcement.text.length > 150;

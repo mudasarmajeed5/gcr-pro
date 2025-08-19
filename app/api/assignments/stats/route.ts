@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Announcement, CourseWorkMaterial } from "@/types/all-data";
-
+import { Material } from "@/types/all-data";
 interface Assignment {
     id: string;
     title: string;
@@ -21,6 +21,7 @@ interface Assignment {
     courseId: string;
     submission?: any;
     isOverdue?: boolean;
+    materials?: Material[];
 }
 
 interface StudentSubmission {
@@ -123,7 +124,7 @@ export async function GET(_request: NextRequest) {
                 const [assignmentsResponse, submissionsResponse, announcementsResponse, courseWorkMaterialsResponse] = await Promise.all([
                     // Get assignments
                     fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials(driveFile(driveFile(id,title,alternateLink)),link))&pageSize=1000`,
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
                         { headers }
                     ),
                     // Get ALL submissions for this course at once
@@ -217,6 +218,7 @@ export async function GET(_request: NextRequest) {
                     submissionState: submission?.state || 'NEW',
                     late: submission?.late || false,
                     courseId,
+                    materials: rawAssignment.materials || [],
                     submission: submission || null,
                     isOverdue
                 };
