@@ -17,7 +17,7 @@ export default function SidebarItem({ href, icon: Icon, label, isActive }: Sideb
                     "flex items-center gap-3 px-3 my-1 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
                     isActive
                         ? "bg-blue-100/70 dark:bg-blue-100/20 text-blue-600 dark:text-blue-300"
-                        : "text-gray-700 dark:text-gray-300"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-blue-100/60 dark:hover:bg-blue-100/20"
                 )}
             >
                 <Icon

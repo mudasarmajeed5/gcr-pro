@@ -31,7 +31,7 @@ export default function AssignmentsOverview() {
     error,
     fetchClassroomData,
     refreshData,
-    shouldRefresh
+    shouldRefresh, 
   } = useClassroomStore();
 
   const handleViewDetails = (filter: 'turnedIn' | 'unsubmitted' | 'missed' | 'graded') => {
@@ -277,16 +277,6 @@ export default function AssignmentsOverview() {
               </p>
             </CardContent>
           </Card>
-        </div>
-      )}
-
-      {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === 'development' && !isLoading && (
-        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm">
-          <h3 className="font-semibold mb-2">Debug Info:</h3>
-          <p>Courses loaded: {courses.length}</p>
-          <p>Assignments loaded: {assignments.length}</p>
-          <p>Stats available: {stats ? 'Yes' : 'No'}</p>
         </div>
       )}
     </div>

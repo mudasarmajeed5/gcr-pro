@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-
-const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000;
+import { Announcement, CourseWorkMaterial } from "@/types/all-data";
 
 interface Assignment {
     id: string;
@@ -18,7 +16,7 @@ interface Assignment {
     };
     maxPoints?: number;
     assignedGrade?: number;
-    submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RECLAIMED_BY_STUDENT';
+    submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RETURNED';
     late?: boolean;
     courseId: string;
     submission?: any;
@@ -26,9 +24,6 @@ interface Assignment {
 }
 
 interface StudentSubmission {
-    assignmentSubmission: {
-        attachments?: any[];
-    };
     submissionHistory: Array<{
         stateHistory: {
             state: string;
@@ -42,10 +37,20 @@ interface StudentSubmission {
     courseWorkId: string;
 }
 
+
 interface Course {
     id: string;
     name: string;
+    section?: string;
+    descriptionHeading?: string;
+    description?: string;
+    room?: string;
+    ownerId: string;
+    creationTime: string;
+    updateTime: string;
+    enrollmentCode?: string;
     courseState: string;
+    alternateLink: string;
 }
 
 interface ClassroomStats {
@@ -56,23 +61,6 @@ interface ClassroomStats {
     totalPoints: number;
     earnedPoints: number;
     percentage: number;
-}
-
-// Cache helper functions
-function getCached(key: string) {
-    const cached = cache.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > CACHE_DURATION) {
-        cache.delete(key);
-        return null;
-    }
-    
-    return cached.data;
-}
-
-function setCache(key: string, data: any) {
-    cache.set(key, { data, timestamp: Date.now() });
 }
 
 // Helper function to check if assignment is overdue
@@ -108,12 +96,6 @@ export async function GET(_request: NextRequest) {
             );
         }
 
-        const cacheKey = `classroom-data-${session.user?.id || 'user'}`;
-        const cachedData = getCached(cacheKey);
-        if (cachedData) {
-            return NextResponse.json(cachedData);
-        }
-
         // Optimized headers for all requests
         const headers = {
             Authorization: `Bearer ${session.accessToken}`,
@@ -123,7 +105,7 @@ export async function GET(_request: NextRequest) {
 
         // Fetch courses with field filtering
         const coursesResponse = await fetch(
-            "https://classroom.googleapis.com/v1/courses?studentId=me&courseStates=ACTIVE&fields=courses(id,name,courseState)&pageSize=1000",
+            "https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE",
             { headers }
         );
 
@@ -138,22 +120,29 @@ export async function GET(_request: NextRequest) {
         const courseDataPromises = courses.map(async (course) => {
             try {
                 // Make both requests in parallel for each course
-                const [assignmentsResponse, submissionsResponse] = await Promise.all([
+                const [assignmentsResponse, submissionsResponse, announcementsResponse, courseWorkMaterialsResponse] = await Promise.all([
                     // Get assignments
                     fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints)&pageSize=1000`,
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials(driveFile(driveFile(id,title,alternateLink)),link))&pageSize=1000`,
                         { headers }
                     ),
                     // Get ALL submissions for this course at once
                     fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late,assignmentSubmission,submissionHistory)&pageSize=1000`,
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late,submissionHistory)&pageSize=1000`,
+                        { headers }
+                    ),
+                    fetch(
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/announcements?fields=announcements(id,text,creationTime,materials)&pageSize=1000`, { headers }
+                    ),
+                    fetch(
+                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials?fields=courseWorkMaterial(id,title,description,materials,creationTime)&pageSize=1000`,
                         { headers }
                     )
                 ]);
-
+                let courseWorkMaterials = []
                 let assignments = [];
                 let submissions = [];
-
+                let announcements = [];
                 if (assignmentsResponse.ok) {
                     const assignmentsData = await assignmentsResponse.json();
                     assignments = assignmentsData.courseWork || [];
@@ -163,8 +152,18 @@ export async function GET(_request: NextRequest) {
                     const submissionsData = await submissionsResponse.json();
                     submissions = submissionsData.studentSubmissions || [];
                 }
+                if (announcementsResponse.ok) {
+                    const materialsData = await announcementsResponse.json();
+                    announcements = materialsData.announcements || [];
+                }
+                if (courseWorkMaterialsResponse.ok) {
+                    const courseWorkMaterialData = await courseWorkMaterialsResponse.json();
+                    courseWorkMaterials = courseWorkMaterialData.courseWorkMaterial || [];
+                }
 
                 return {
+                    announcements,
+                    courseWorkMaterials,
                     courseId: course.id,
                     assignments,
                     submissions
@@ -179,6 +178,8 @@ export async function GET(_request: NextRequest) {
 
         // Process and combine all data
         const allAssignments: Assignment[] = [];
+        const allCourseWork: CourseWorkMaterial[] = [];
+        const allAnnouncements: Announcement[] = [];
         let totalAssignments = 0;
         let turnedIn = 0;
         let unsubmitted = 0;
@@ -189,20 +190,23 @@ export async function GET(_request: NextRequest) {
         const now = new Date();
 
         // Process each course's data
-        courseData.forEach(({ courseId, assignments, submissions }) => {
+        courseData.forEach(({ courseId, assignments, submissions, announcements, courseWorkMaterials }) => {
             // Create a map of submissions by courseWorkId for quick lookup
             const submissionMap = new Map();
             submissions.forEach((submission: StudentSubmission) => {
                 submissionMap.set(submission.courseWorkId, submission);
             });
-
+            courseWorkMaterials.forEach((rawCourseWork: any) => {
+                allCourseWork.push({ ...rawCourseWork, courseId });
+            })
+            announcements.forEach((rawMaterial: any) => {
+                allAnnouncements.push({ ...rawMaterial, courseId })
+            })
             // Process each assignment
             assignments.forEach((rawAssignment: any) => {
                 totalAssignments++;
                 const submission = submissionMap.get(rawAssignment.id);
                 const isOverdue = checkIfOverdue(rawAssignment, now);
-
-                // Create the assignment object with all necessary data
                 const assignment: Assignment = {
                     id: rawAssignment.id,
                     title: rawAssignment.title,
@@ -256,12 +260,12 @@ export async function GET(_request: NextRequest) {
         // Return comprehensive data
         const responseData = {
             courses,
+            materials: allCourseWork,
+            announcements: allAnnouncements,
             assignments: allAssignments,
             stats
         };
 
-        // Cache the results
-        setCache(cacheKey, responseData);
 
         return NextResponse.json(responseData);
 

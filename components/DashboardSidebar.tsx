@@ -27,11 +27,6 @@ const sidebarItems = [
         label: 'Assignments'
     },
     {
-        href: '/messages',
-        icon: MessageSquareIcon,
-        label: 'Messages'
-    },
-    {
         href: '/send-email',
         icon: MailIcon,
         label: 'Send Email'
@@ -46,7 +41,7 @@ const sidebarItems = [
 export default function DashboardSidebar() {
     const pathname = usePathname()
     const { data: session } = useSession()
-
+    const isDashboardActive = pathname === "/"
     const getCurrentSession = () => {
         const now = new Date()
         const year = now.getFullYear()
@@ -65,15 +60,18 @@ export default function DashboardSidebar() {
         <div className="flex flex-col h-full">
             {/* Navigation Links */}
             <nav className="flex-1 p-4 space-y-2">
-                {sidebarItems.map((item) => (
-                    <SidebarItem
+                {sidebarItems.map((item, idx) => {
+                    const isActive = item.href === "/" ? isDashboardActive : pathname.startsWith(item.href)
+                    return <SidebarItem
                         key={item.href}
                         href={item.href}
                         icon={item.icon}
                         label={item.label}
-                        isActive={pathname === item.href}
+                        isActive={isActive}
+
                     />
-                ))}
+                }
+                )}
             </nav>
 
             {/* Bottom Section */}

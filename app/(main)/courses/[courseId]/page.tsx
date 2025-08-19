@@ -1,32 +1,79 @@
-// app/course/[courseId]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useCourseAssignments, useCourseStats } from '@/store/useClassroom';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useClassroomStore } from '@/store/classroom-store';
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardContent,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft } from 'lucide-react';
+import { getAllProfessors, Professor } from '../../send-email/actions/get-professor-details';
+import InstructorCard from './components/InstructorCard';
+import RecentAssignmentsCard from './components/RecentAssignments';
+import CourseMaterialsCard from './components/CourseMaterialCard';
+import { useRouter } from 'next/navigation';
+import AnnouncementsCard from './components/AnnoucementsCard';
+import { Button } from '@/components/ui/button';
 
 export default function CoursePage() {
+    const router = useRouter();
     const params = useParams();
+    const [courseInstructor, setCourseInstructor] = useState<Professor>()
+    const [professorLoading,setProfessorLoading] = useState(false);
     const courseId = params.courseId as string;
-    
-    const { 
-        course, 
-        assignments, 
-        assignmentCount, 
-        turnedInCount, 
-        overdueCount, 
-        pendingCount 
-    } = useCourseAssignments(courseId);
-    
-    const stats = useCourseStats(courseId);
+    const getProfessor = async (courseId: string) => {
+        setProfessorLoading(true)
+        const professors = await getAllProfessors();
+        const prof = professors.find((professor) => professor.courseId == courseId)
+        setCourseInstructor(prof);
+        setProfessorLoading(false);
+    }
+ 
+    const {
+        fetchClassroomData,
+        isLoading,
+        getAssignmentsByCourseId,
+        getCourseById,
+        getMaterialsByCourseId
+    } = useClassroomStore();
 
-    if (!course) {
+    const courseMaterials = getMaterialsByCourseId(courseId)
+    // Fetch store data if stale
+    useEffect(() => {
+        fetchClassroomData();
+        getProfessor(courseId)
+    }, [fetchClassroomData]);
+
+    // Get course and assignments
+    const course = getCourseById(courseId);
+    const courseAssignments = getAssignmentsByCourseId(courseId);
+
+    // Stats counts
+    const assignmentCount = courseAssignments.length;
+    const completedCount = courseAssignments.filter(a =>
+        ['TURNED_IN', 'RETURNED'].includes(a.submissionState)
+    ).length;
+    const overdueCount = courseAssignments.filter(a =>
+        a.isOverdue && !['TURNED_IN', 'RETURNED'].includes(a.submissionState)
+    ).length;
+    const pendingCount = courseAssignments.filter(a =>
+        !a.isOverdue && !['TURNED_IN', 'RETURNED'].includes(a.submissionState)
+    ).length;
+
+    if (!course && !isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 space-y-6">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-800">Course not found</h1>
-                    <Link href="/" className="text-blue-500 hover:underline mt-4 inline-block">
-                        ← Back to Dashboard
+                    <Link href="/courses" className="text-blue-500 hover:underline mt-4 flex items-center gap-2">
+                        <ArrowLeft /> <span>Back to Courses</span>
                     </Link>
                 </div>
             </div>
@@ -34,139 +81,85 @@ export default function CoursePage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 space-y-6">
             {/* Header */}
-            <div className="mb-6">
-                <Link href="/" className="text-blue-500 hover:underline mb-4 inline-block">
-                    ← Back to Dashboard
+            <div className="flex flex-col gap-2">
+                <Link href="/courses">
+                    <Button variant="ghost" className="w-fit flex items-center gap-2">
+                        <ArrowLeft /> <span>Back to Courses</span>
+                    </Button>
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-800">{course.name}</h1>
-            </div>
-
-            {/* Course Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white p-4 rounded-lg shadow">
-                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total</h3>
-                    <p className="text-2xl font-bold text-blue-600">{assignmentCount}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Submitted</h3>
-                    <p className="text-2xl font-bold text-green-600">{turnedInCount}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Overdue</h3>
-                    <p className="text-2xl font-bold text-red-600">{overdueCount}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Grade</h3>
-                    <p className="text-2xl font-bold text-purple-600">{stats.percentage}%</p>
-                </div>
-            </div>
-
-            {/* Assignment Filters */}
-            <div className="mb-6">
-                <div className="flex flex-wrap gap-2">
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                        All ({assignmentCount})
-                    </button>
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                        Pending ({pendingCount})
-                    </button>
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                        Submitted ({turnedInCount})
-                    </button>
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                        Overdue ({overdueCount})
-                    </button>
-                </div>
-            </div>
-
-            {/* Assignments List */}
-            <div className="space-y-4">
-                {assignments.length === 0 ? (
-                    <div className="text-center py-8">
-                        <p className="text-gray-500 italic">No assignments found for this course.</p>
-                    </div>
+                {isLoading ? (
+                    <Skeleton className="h-8 w-1/2" />
                 ) : (
-                    assignments.map((assignment:any) => (
-                        <div 
-                            key={assignment.id}
-                            className={`bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow border-l-4 ${
-                                assignment.submissionState === 'TURNED_IN' 
-                                    ? 'border-l-green-500' 
-                                    : assignment.isOverdue 
-                                    ? 'border-l-red-500'
-                                    : 'border-l-yellow-500'
-                            }`}
-                        >
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                                        {assignment.title}
-                                    </h3>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                                        {assignment.dueDate && (
-                                            <div>
-                                                <span className="font-medium">Due Date:</span>
-                                                <p>{assignment.dueDate.month}/{assignment.dueDate.day}/{assignment.dueDate.year}
-                                                {assignment.dueTime && (
-                                                    ` at ${assignment.dueTime.hours}:${assignment.dueTime.minutes.toString().padStart(2, '0')}`
-                                                )}
-                                                </p>
-                                            </div>
-                                        )}
-                                        
-                                        {assignment.maxPoints && (
-                                            <div>
-                                                <span className="font-medium">Points:</span>
-                                                <p>{assignment.assignedGrade !== undefined ? assignment.assignedGrade : 'Not graded'} / {assignment.maxPoints}</p>
-                                            </div>
-                                        )}
-                                        
-                                        <div>
-                                            <span className="font-medium">Status:</span>
-                                            <p className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                    assignment.submissionState === 'TURNED_IN' 
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : assignment.isOverdue
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                    {assignment.submissionState === 'TURNED_IN' 
-                                                        ? 'Submitted' 
-                                                        : assignment.isOverdue 
-                                                        ? 'Overdue'
-                                                        : 'Pending'
-                                                    }
-                                                </span>
-                                                {assignment.late && (
-                                                    <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded font-medium">
-                                                        Late
-                                                    </span>
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Submission details if available */}
-                                    {assignment.submission && (
-                                        <div className="mt-4 p-3 bg-gray-50 rounded">
-                                            <h4 className="font-medium text-gray-700 mb-2">Submission Details</h4>
-                                            <div className="text-sm text-gray-600">
-                                                <p>State: {assignment.submission.state}</p>
-                                                {assignment.submission.assignmentSubmission?.attachments && (
-                                                    <p>Attachments: {assignment.submission.assignmentSubmission.attachments.length}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                    <h1 className="text-3xl font-bold tracking-tight">{course?.name}</h1>
+                )}
+                {isLoading ? (
+                    <Skeleton className="h-4 w-1/3" />
+                ) : (
+                    <p className="text-muted-foreground">{course?.section}</p>
+                )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Course Details */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Announcement Card */}
+                    <AnnouncementsCard courseId={courseId} />
+                    {/* Assignments Overview */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Assignments</CardTitle>
+                            <CardDescription>Your progress in this course</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <div className="flex flex-col items-center p-4 border rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Total</span>
+                                    <span className="text-2xl font-bold">{assignmentCount}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-4 border rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Submitted</span>
+                                    <span className="text-2xl font-bold text-green-600">{completedCount}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-4 border rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Overdue</span>
+                                    <span className="text-2xl font-bold text-red-600">{overdueCount}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-4 border rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Pending</span>
+                                    <span className="text-2xl font-bold text-yellow-600">{pendingCount}</span>
                                 </div>
                             </div>
-                        </div>
-                    ))
-                )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Recent Assignments */}
+                    <RecentAssignmentsCard courseAssignments={courseAssignments} isLoading={isLoading} />
+                </div>
+
+                {/* Right Column - Course Info */}
+                <div className="space-y-6">
+                    <CourseMaterialsCard courseMaterials={courseMaterials} courseId={courseId} isLoading={isLoading} />
+
+                    <InstructorCard courseInstructor={courseInstructor} isLoading={professorLoading} />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quick Links</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Button variant="link" className="w-full justify-start p-0">
+                                <a href={course?.alternateLink} target="_blank" rel="noopener noreferrer">
+                                    Open in Google Classroom
+                                </a>
+                            </Button>
+                            <Separator className="my-2" />
+                            <Button variant="link" onClick={() => { router.push("/send-email") }} className="w-full justify-start p-0">
+                                Contact Instructor
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

@@ -3,7 +3,7 @@
 import { google } from "googleapis"
 import { auth } from "@/auth"
 
-interface Professor {
+export interface Professor {
   courseId: string
   courseName: string
   id: string
@@ -66,7 +66,6 @@ export async function getAllProfessors(): Promise<Professor[]> {
   // Check cache first
   const cachedData = getCachedProfessors(userId)
   if (cachedData) {
-    console.log(`🎯 Returning cached professors for user: ${userId}`)
     return cachedData
   }
 

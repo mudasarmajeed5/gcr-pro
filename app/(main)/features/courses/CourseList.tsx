@@ -1,74 +1,36 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw, ExternalLink, MapPin, Users } from "lucide-react";
 import { CourseCardSkeleton } from "./CourseSkeleton";
-
-interface Course {
-  id: string;
-  name: string;
-  section?: string;
-  descriptionHeading?: string;
-  description?: string;
-  room?: string;
-  ownerId: string;
-  creationTime: string;
-  updateTime: string;
-  enrollmentCode?: string;
-  courseState: string;
-  alternateLink: string;
-}
-
-interface CoursesResponse {
-  courses?: Course[];
-  nextPageToken?: string;
-}
-
-// Skeleton component for loading state
-
+import { useClassroomStore } from "@/store/classroom-store";
 
 export default function CoursesList() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCourses = async () => {
-    if (!session) return;
-
-    setLoading(true);
-    setError(null);
-
+  const { courses, isLoading, error, fetchClassroomData, refreshData } = useClassroomStore();
+  const handleRefresh = async () => {
     try {
-      const response = await fetch("/api/courses");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch courses");
-      }
-
-      setCourses(data.courses || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+      await refreshData();
+      console.log("Data refreshed successfully");
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
     }
   };
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetchCourses();
+      fetchClassroomData();
     }
-  }, [status]);
+  }, [status, fetchClassroomData]);
 
   const handleCourseClick = (courseId: string) => {
-    router.push(`/course/${courseId}`);
+    router.push(`/courses/${courseId}`);
   };
 
   if (!session) {
@@ -96,13 +58,13 @@ export default function CoursesList() {
           </p>
         </div>
         <Button
-          onClick={fetchCourses}
-          disabled={loading}
+          onClick={handleRefresh}
+          disabled={isLoading}
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -113,7 +75,7 @@ export default function CoursesList() {
         </Alert>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <CourseCardSkeleton key={index} />
@@ -130,7 +92,7 @@ export default function CoursesList() {
               <p className="text-muted-foreground mb-4">
                 You don't have any courses available at the moment.
               </p>
-              <Button onClick={fetchCourses} variant="outline">
+              <Button onClick={() => { }} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh Courses
               </Button>
@@ -183,8 +145,8 @@ export default function CoursesList() {
 
                   <div className="flex items-center justify-between pt-4 border-t">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.courseState === 'ACTIVE'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
                       }`}>
                       {course.courseState}
                     </span>
