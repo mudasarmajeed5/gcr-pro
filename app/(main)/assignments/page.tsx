@@ -3,16 +3,14 @@
 import { useSession } from 'next-auth/react'
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import Link from "next/link"
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Calendar, CheckCircle, XCircle, AlertTriangle, BookOpen, Clock } from 'lucide-react'
+import {  CheckCircle, XCircle, AlertTriangle, BookOpen, Clock } from 'lucide-react'
 import { useAssignmentsLayout } from './layout'
-import { formatDueDate } from "@/utils/formatDueDate"
 import { useClassroomStore } from "@/store/classroom-store"
+import AssignmentCards from './AssignmentCards'
 
 // Helper functions
 const getDaysUntilDue = (assignment: any): number => {
@@ -168,43 +166,6 @@ const Assignments = () => {
         }
     }
 
-    const getStatusBadge = (assignment: any) => {
-        if (filter === 'graded') {
-            const percentage = assignment.totalMarks > 0
-                ? Math.round((assignment.obtainedMarks || 0) / assignment.totalMarks * 100)
-                : 0;
-
-            let badgeColor = 'bg-gray-100 text-gray-800';
-            if (percentage >= 90) badgeColor = 'bg-green-100 text-green-800';
-            else if (percentage >= 80) badgeColor = 'bg-blue-100 text-blue-800';
-            else if (percentage >= 70) badgeColor = 'bg-yellow-100 text-yellow-800';
-            else if (percentage >= 60) badgeColor = 'bg-orange-100 text-orange-800';
-            else badgeColor = 'bg-red-100 text-red-800';
-
-            return <Badge className={badgeColor}>{percentage}%</Badge>;
-        }
-
-        if (filter === 'turnedIn') {
-            return assignment.isGraded
-                ? <Badge className="bg-green-100 text-green-800">Graded</Badge>
-                : <Badge className="bg-blue-100 text-blue-800">Submitted</Badge>;
-        }
-
-        if (filter === 'unsubmitted') {
-            return assignment.daysLeft !== undefined && assignment.daysLeft >= 0
-                ? <Badge className="bg-yellow-100 text-yellow-800">{assignment.daysLeft} days left</Badge>
-                : <Badge className="bg-gray-100 text-gray-800">No due date</Badge>;
-        }
-
-        if (filter === 'missed') {
-            return <Badge className="bg-red-100 text-red-800">
-                {assignment.daysOverdue} days overdue
-            </Badge>;
-        }
-
-        return null;
-    }
-
     if (status === "loading" || isLoading) {
         return (
             <div className="space-y-4">
@@ -286,90 +247,8 @@ const Assignments = () => {
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredData.assignments.map((assignment) => (
-                        <Link key={assignment.id} href={`/assignments/${assignment.id}`} className="block">
-                            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                                <CardHeader>
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex-1">
-                                            <CardTitle className="text-lg leading-tight">
-                                                {assignment.title}
-                                            </CardTitle>
-                                            <CardDescription className="flex items-center gap-1 mt-1">
-                                                <BookOpen className="h-3 w-3" />
-                                                {assignment.courseName}
-                                            </CardDescription>
-                                        </div>
-                                        {getStatusBadge(assignment)}
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent className="space-y-4">
-                                    {/* Due Date */}
-                                    {assignment.dueDate && (
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <Calendar className="h-4 w-4" />
-                                            {formatDueDate(assignment)}
-                                        </div>
-                                    )}
-
-                                    {/* Graded Assignments - Show Score */}
-                                    {filter === "graded" && (
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span>Score</span>
-                                                <span className="font-medium">
-                                                    {assignment.obtainedMarks}/{assignment.totalMarks}
-                                                </span>
-                                            </div>
-                                            <Progress
-                                                value={
-                                                    assignment.totalMarks > 0
-                                                        ? ((assignment.obtainedMarks || 0) / assignment.totalMarks) *
-                                                        100
-                                                        : 0
-                                                }
-                                                className="h-2"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Turned In Assignments - Show Total Points */}
-                                    {filter === "turnedIn" && assignment.totalMarks > 0 && (
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span>Total Points</span>
-                                                <span className="font-medium">{assignment.totalMarks}</span>
-                                            </div>
-                                            {assignment.obtainedMarks !== undefined &&
-                                                assignment.obtainedMarks !== null && (
-                                                    <div className="flex justify-between text-sm">
-                                                        <span>Score</span>
-                                                        <span className="font-medium">
-                                                            {assignment.obtainedMarks}/{assignment.totalMarks}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                        </div>
-                                    )}
-
-                                    {/* Unsubmitted & Missed - Show Total Points */}
-                                    {(filter === "unsubmitted" || filter === "missed") &&
-                                        assignment.totalMarks > 0 && (
-                                            <div className="flex justify-between text-sm">
-                                                <span>Total Points</span>
-                                                <span className="font-medium">{assignment.totalMarks}</span>
-                                            </div>
-                                        )}
-
-                                    {/* Late indicator */}
-                                    {assignment.isLate && (
-                                        <div className="flex items-center gap-1 text-orange-600 text-sm">
-                                            <AlertTriangle className="h-4 w-4" />
-                                            <span>Submitted late</span>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                        <Link key={assignment.id} href={`/assignments/${assignment.id}`} className="block h-full">
+                            <AssignmentCards assignment={assignment}/>
                         </Link>
                     ))}
                 </div>

@@ -1,42 +1,9 @@
 "use client"
 import { usePathname } from 'next/navigation'
-import { GraduationCap, Home } from 'lucide-react'
+import { GraduationCap } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import SidebarItem from './SidebarItem'
-import {
-    BookOpenIcon,
-    MessageSquareIcon,
-    MailIcon,
-    SettingsIcon,
-} from 'lucide-react'
-
-const sidebarItems = [
-    {
-        href: "/",
-        icon: Home,
-        label: "Dashboard"
-    },
-    {
-        href: "/courses",
-        icon: GraduationCap,
-        label: "Courses"
-    },
-    {
-        href: '/assignments',
-        icon: BookOpenIcon,
-        label: 'Assignments'
-    },
-    {
-        href: '/send-email',
-        icon: MailIcon,
-        label: 'Send Email'
-    },
-    {
-        href: '/settings',
-        icon: SettingsIcon,
-        label: 'Preferences'
-    }
-]
+import { sidebarItems } from '@/constants/side-bar-items'
 
 export default function DashboardSidebar() {
     const pathname = usePathname()

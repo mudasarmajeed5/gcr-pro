@@ -2,7 +2,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, BookOpen, FileText, Calendar } from 'lucide-react'
-import { usePreviewStore } from '@/store/preview-store'
 import Fuse from 'fuse.js'
 import {
     Command,
@@ -15,10 +14,11 @@ import {
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
 import { useClassroomStore } from '@/store/classroom-store'
+import GlobalPreviewMaterial from './GlobalPreviewMaterial'
 
 const GlobalSearch = () => {
     const [open, setOpen] = useState(false)
-    const { openPreview } = usePreviewStore();
+    const [previewFile, setPreviewFile] = useState<{ url: string, title: string } | null>(null)
     const router = useRouter()
 
     // Get data from the store
@@ -80,8 +80,13 @@ const GlobalSearch = () => {
             const firstMaterial = item.materials?.[0];
 
             if (firstMaterial?.driveFile) {
-                
-                
+                // Open the file preview modal
+                const driveFile = firstMaterial.driveFile;
+                const fileUrl = `https://drive.google.com/file/d/${driveFile.driveFile?.id}/preview`;
+                setPreviewFile({
+                    url: fileUrl,
+                    title: item.displayName || 'File Preview'
+                });
             } else {
                 // For non-drive materials, open in new tab
                 let url = '';
@@ -92,6 +97,11 @@ const GlobalSearch = () => {
                 if (url) window.open(url, '_blank');
             }
         }
+    }
+
+    // Close the preview modal
+    const closePreview = () => {
+        setPreviewFile(null);
     }
 
     // Search function
@@ -164,10 +174,19 @@ const GlobalSearch = () => {
                     </CommandList>
                 </Command>
             </CommandDialog>
+
+            {/* File Preview Modal */}
+            {previewFile && (
+
+                <GlobalPreviewMaterial
+                    onClose={() => { setPreviewFile(null) }}
+                    title={previewFile.title}
+                    link={previewFile.url}
+                />
+            )}
         </>
     )
 }
-
 // Separate component to handle search results
 const SearchResults = ({
     performSearch,

@@ -6,8 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Link, Youtube, Calendar, Clock, User, BookOpen } from "lucide-react";
-
+import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
+import Link from "next/link";
 const ViewAssignment = () => {
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
@@ -74,8 +74,13 @@ const ViewAssignment = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b sticky top-0 z-10 bg-background">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
+            <Link href="/assignments">
+              <div className="w-10 h-10 rounded-lg bg-gray-50/10 flex items-center justify-center hover:bg-muted transition">
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </Link>
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-primary-foreground" />
             </div>
@@ -180,7 +185,7 @@ const ViewAssignment = () => {
                           className="flex items-center gap-3 p-4 text-foreground hover:text-primary"
                         >
                           <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <Link className="w-5 h-5 text-green-600" />
+                            <LinkIcon className="w-5 h-5 text-green-600" />
                           </div>
                           <div className="flex-1">
                             <p className="font-medium">{material.link.title}</p>

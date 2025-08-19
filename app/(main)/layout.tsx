@@ -36,7 +36,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 variant="ghost"
                 size="icon"
                 onClick={() => setSidebarOpen(false)}
-                className="absolute top-2 right-2 z-50"
+                className="absolute top-2 right-2 z-30"
               >
                 <PanelLeft className="h-5 w-5" />
               </Button>
