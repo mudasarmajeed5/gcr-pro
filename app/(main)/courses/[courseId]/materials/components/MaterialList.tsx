@@ -4,82 +4,25 @@ import { CourseWorkMaterial } from '@/types/all-data';
 import { FileText, Link, Play, FileSpreadsheet, Calendar, ExternalLink, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { usePreviewStore } from '@/store/preview-store';
-
+import { formatDate } from '@/utils/formatDate';
 interface MaterialListProps {
     materials: CourseWorkMaterial[];
+    authId: number
 }
 
-const MaterialList = ({ materials }: MaterialListProps) => {
+const MaterialList = ({ materials, authId }: MaterialListProps) => {
     const { openPreview } = usePreviewStore();
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+    const downloadFile = (fileId: string) => {
+        const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = ""; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
-    const getDriveDownloadUrl = (fileId: string) =>
-        `https://drive.google.com/uc?export=download&id=${fileId}`;
-
-    const downloadMaterial = async (material: CourseWorkMaterial) => {
-        const first = material.materials?.[0];
-        if (!first) {
-            toast.error('No downloadable content found');
-            return;
-        }
-
-        let url = '';
-        let filename = material.title;
-
-        if (first.driveFile) {
-            url = getDriveDownloadUrl(first.driveFile.driveFile.id);
-            filename = first.driveFile.driveFile.title || filename;
-        } else if (first.link) {
-            url = first.link.url;
-            filename = first.link.title || filename;
-        } else if (first.form) {
-            url = first.form.formUrl;
-            filename = first.form.title || filename;
-        } else if (first.youtubeVideo) {
-            // YouTube videos can't be downloaded directly, open in new tab
-            window.open(first.youtubeVideo.alternateLink, '_blank');
-            return;
-        }
-
-        if (!url) {
-            toast.error('No downloadable content found');
-            return;
-        }
-
-        try {
-            const downloadUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
-
-            // Create a temporary anchor element
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = filename;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-
-            // Trigger the download
-            link.click();
-
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(link);
-                toast.success(`Downloaded: ${filename}`);
-            }, 100);
-        } catch (error) {
-            console.error('Download failed:', error);
-            toast.error(`Failed to download: ${filename}`);
-            // Fallback: open in new tab
-            window.open(url, '_blank');
-        }
-    };
 
     const openInNewWindow = (material: CourseWorkMaterial) => {
         const first = material.materials?.[0];
@@ -131,8 +74,13 @@ const MaterialList = ({ materials }: MaterialListProps) => {
     };
 
     const handleDownloadClick = (e: React.MouseEvent, material: CourseWorkMaterial) => {
-        e.stopPropagation(); // Prevent triggering the parent click event
-        downloadMaterial(material);
+        e.stopPropagation();
+        material.materials?.forEach((m) => {
+            const fileId = m.driveFile?.driveFile.id;
+            if (fileId) {
+                downloadFile(fileId);
+            }
+        });
     };
 
     const getIcon = (material: CourseWorkMaterial) => {
@@ -184,14 +132,16 @@ const MaterialList = ({ materials }: MaterialListProps) => {
                                 openInNewWindow(material)
                             }}
                         >
+                            Preview
                             <ExternalLink className="w-4 h-4" />
                         </Button>
                         <Button
                             className='hover:bg-blue-300/70 cursor-pointer dark:hover:bg-green-500/80'
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={(e) => handleDownloadClick(e, material)}
                         >
+                            Download
                             <Download className="w-4 h-4" />
                         </Button>
                     </div>

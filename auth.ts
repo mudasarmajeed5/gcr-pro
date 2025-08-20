@@ -37,14 +37,14 @@ export const authOptions: NextAuthConfig = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       // Store access token & refresh token on initial sign in
       if (account) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.expiresAt = account.expires_at;
-      }
 
+      }
       // Check if token needs refresh (expires in 5 minutes or less)
       if (token.expiresAt && Date.now() < (token.expiresAt as number) * 1000 - 300000) {
         return token;

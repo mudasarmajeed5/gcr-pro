@@ -205,7 +205,10 @@ const SearchResults = ({
             return () => input.removeEventListener('input', handleInput)
         }
     }, [])
-
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
     const results = useMemo(() => performSearch(query), [query, performSearch])
 
     return (
@@ -252,7 +255,9 @@ const SearchResults = ({
                                     {assignment.dueDate && (
                                         <>
                                             <span>•</span>
-                                            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                                            <span>
+                                                Due: {monthNames[assignment.dueDate.month - 1]} {assignment.dueDate.day}, {assignment.dueDate.year}
+                                            </span>
                                         </>
                                     )}
                                 </div>

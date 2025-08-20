@@ -238,20 +238,7 @@ const ViewAssignment = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 mt-8 pt-6 border-t">
-              {isSubmitted ? (
-                <>
-                  <Button variant="outline" className="flex-1">View Submission</Button>
-                  <Button variant="outline" className="flex-1">Unsubmit</Button>
-                </>
-              ) : (
-                <>
-                  <Button className="flex-1">Turn in</Button>
-                  <Button variant="outline" className="flex-1">Mark as done</Button>
-                </>
-              )}
-            </div>
+       
           </CardContent>
         </Card>
       </div>
