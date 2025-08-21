@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import { useClassroomStore } from "@/store/classroom-store";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
 import Link from "next/link";

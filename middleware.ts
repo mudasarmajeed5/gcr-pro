@@ -1,6 +1,8 @@
-// ./middleware.ts
-import { auth } from "@/auth"
 import { NextResponse } from "next/server"
+import NextAuth from "next-auth"
+import authConfig from "./auth.config"
+
+const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   if (!req.auth) {
@@ -9,8 +11,7 @@ export default auth((req) => {
 
   return NextResponse.next()
 })
-
-// Optional: configure matcher so it doesn't run on static files or the signin page itself
+  
 export const config = {
   matcher: [
     "/((?!api/auth|_next/static|_next/image|favicon.ico|sign-in).*)",
