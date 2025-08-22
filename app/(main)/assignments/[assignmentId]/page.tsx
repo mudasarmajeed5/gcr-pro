@@ -3,6 +3,7 @@ import { usePreviewStore } from "@/store/preview-store";
 import { useParams } from "next/navigation";
 import { useClassroomStore } from "@/store/classroom-store";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Material } from "@/types/all-data";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
@@ -154,17 +155,20 @@ const ViewAssignment = () => {
                   Materials
                 </h3>
                 <div className="grid gap-3">
-                  {assignment.materials.map((material: any, idx: number) => (
+                  {assignment.materials.map((material: Material, idx: number) => (
                     <div key={idx} className="border rounded-lg hover:bg-muted/50 transition-colors">
                       {material.driveFile && (
                         <div
                           className="flex items-center gap-3 p-4 text-foreground hover:text-primary cursor-pointer"
-                          onClick={() => openPreview({
-                            title: material.driveFile.driveFile.title,
-                            type: 'driveFile',
-                            url: material.driveFile.driveFile.alternateLink,
-                            driveFileId: material.driveFile.driveFile.id
-                          })}
+                          onClick={() =>
+                            openPreview({
+                              title: material.driveFile?.driveFile?.title ?? "",
+                              type: "driveFile",
+                              url: material.driveFile?.driveFile?.alternateLink ?? "",
+                              driveFileId: material.driveFile?.driveFile?.id ?? "",
+                            })
+                          }
+
                         >
                           <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                             <FileText className="w-5 h-5 text-blue-600" />
@@ -237,7 +241,7 @@ const ViewAssignment = () => {
               </div>
             )}
 
-       
+
           </CardContent>
         </Card>
       </div>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useClassroomStore } from '@/store/classroom-store';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Material } from '@/types/all-data';
 
 const AnnouncementsCard = ({ courseId }: { courseId: string }) => {
     const { getAnnouncementsByCourseId } = useClassroomStore();
@@ -29,7 +30,7 @@ const AnnouncementsCard = ({ courseId }: { courseId: string }) => {
         });
     };
 
-    const getMaterialIcon = (material: any) => {
+    const getMaterialIcon = (material: Material) => {
         if (material.driveFile) return <FileText className="w-3 h-3" />;
         if (material.youtubeVideo) return <Play className="w-3 h-3 text-red-500" />;
         if (material.link) return <Link className="w-3 h-3 text-blue-500" />;

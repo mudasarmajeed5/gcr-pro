@@ -1,4 +1,5 @@
 // lib/gemini.ts
+
 export async function generateContent(prompt: string): Promise<string> {
   try {
     const response = await fetch(
@@ -27,7 +28,7 @@ export async function generateContent(prompt: string): Promise<string> {
 
     // Fix: content.parts is the array, not content
     const generatedText = data?.candidates?.[0]?.content?.parts
-      ?.map((part: any) => part.text)
+      ?.map((part: { text?: string }) => part.text ?? "")
       .join('\n') || '';
 
     return generatedText;

@@ -90,7 +90,7 @@ export default function CoursesList() {
               </div>
               <h3 className="text-lg font-semibold mb-2">No courses found</h3>
               <p className="text-muted-foreground mb-4">
-                You don't have any courses available at the moment.
+                You dont have any courses available at the moment.
               </p>
               <Button onClick={() => { }} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />

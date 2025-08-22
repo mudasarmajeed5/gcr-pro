@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-
+import { Course } from "@/types/all-data";
 interface Assignment {
     id: string;
     title: string;
@@ -17,6 +17,49 @@ interface Assignment {
     maxPoints?: number;
     assignedGrade?: number;
 }
+
+// Base assignment interface (extends your existing Assignment)
+interface BaseFilteredAssignment extends Assignment {
+    courseName: string;
+    isOverdue: boolean;
+    totalMarks: number;
+    submissionState: string;
+}
+
+// Specific interfaces for each filter type
+interface GradedAssignment extends BaseFilteredAssignment {
+    obtainedMarks: number;
+    isLate: boolean;
+}
+
+interface TurnedInAssignment extends BaseFilteredAssignment {
+    obtainedMarks: number | null;
+    isLate: boolean;
+    isGraded: boolean;
+}
+
+interface UnsubmittedAssignment extends BaseFilteredAssignment {
+    daysLeft: number | null;
+}
+
+interface MissedAssignment extends BaseFilteredAssignment {
+    daysOverdue: number | null;
+}
+
+type FilteredAssignment = 
+    | GradedAssignment 
+    | TurnedInAssignment 
+    | UnsubmittedAssignment 
+    | MissedAssignment;
+
+
+
+type FilteredAssignmentsByType<T extends string> = 
+    T extends "graded" ? GradedAssignment[] :
+    T extends "turnedIn" ? TurnedInAssignment[] :
+    T extends "unsubmitted" ? UnsubmittedAssignment[] :
+    T extends "missed" ? MissedAssignment[] :
+    FilteredAssignment[];
 
 interface StudentSubmission {
     courseWorkId: string;
@@ -68,12 +111,12 @@ export async function GET(request: NextRequest) {
 
         // Create course name map for quick lookup
         const courseNameMap = new Map();
-        courses.forEach((course: any) => {
+        courses.forEach((course: Course) => {
             courseNameMap.set(course.id, course.name);
         });
 
         // Fetch assignments and submissions for all courses
-        const courseDataPromises = courses.map(async (course: any) => {
+        const courseDataPromises = courses.map(async (course: Course) => {
             try {
                 const [assignmentsResponse, submissionsResponse] = await Promise.all([
                     fetch(
@@ -111,7 +154,7 @@ export async function GET(request: NextRequest) {
         });
 
         const courseData = await Promise.all(courseDataPromises);
-        const filteredAssignments: any[] = [];
+        const filteredAssignments: FilteredAssignment[] = [];
         const now = new Date();
 
         // Process and filter assignments based on the requested filter

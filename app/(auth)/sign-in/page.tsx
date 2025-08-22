@@ -2,7 +2,6 @@
 
 import { signIn } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { FcGoogle } from "react-icons/fc"
 import { ShieldCheck, LogIn } from "lucide-react"
 

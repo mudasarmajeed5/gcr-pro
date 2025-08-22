@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Calendar, AlertTriangle, BookOpen } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

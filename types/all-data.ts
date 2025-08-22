@@ -141,3 +141,30 @@ export interface Course {
     courseState: string;
     alternateLink: string;
 }
+export interface Material {
+    driveFile?: {
+        driveFile: {
+            id: string;
+            title: string;
+            alternateLink: string;
+        };
+        shareMode: 'VIEW' | 'EDIT';
+    };
+    link?: {
+        url: string;
+        title: string;
+        thumbnailUrl?: string;
+    };
+    youtubeVideo?: {
+        id: string;
+        title: string;
+        alternateLink: string;
+        thumbnailUrl?: string;
+    };
+    form?: {
+        formUrl: string;
+        responseUrl?: string;
+        title: string;
+        thumbnailUrl?: string;
+    };
+}[]

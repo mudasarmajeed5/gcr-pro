@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable */
+
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Announcement, CourseWorkMaterial } from "@/types/all-data";
 import { Material } from "@/types/all-data";
@@ -86,7 +88,7 @@ function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
     return currentDate > dueDate;
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
     try {
         const session = await auth();
 

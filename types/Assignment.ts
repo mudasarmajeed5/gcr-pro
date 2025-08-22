@@ -35,3 +35,5 @@ export interface RecentAssignment {
   assignedGrade?: number
   maxPoints?: number
 }
+
+
