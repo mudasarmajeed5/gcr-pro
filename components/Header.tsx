@@ -26,7 +26,7 @@ export default function Header() {
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <span>Class <span className="text-secondary-foreground/70">Hub</span></span>
+          <span>GCR <span className="text-secondary-foreground/70">Pro</span></span>
         </Link>
 
         {/* Center: Search */}

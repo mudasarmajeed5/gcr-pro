@@ -14,25 +14,25 @@ import { MaterialPreviewModal } from "@/components/material-preview-modal"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  
   return (
     <>
       <main>
-
         <MaterialPreviewModal />
         <Header />
-        <div className="h-[calc(100vh-70px)] relative">
+        <div className="h-[calc(100vh-70px)]">
           <ResizablePanelGroup direction="horizontal">
-            {/* Sidebar */}
-            {sidebarOpen && (
-              <ResizablePanel
-                defaultSize={20}
-                minSize={15}
-                maxSize={30}
-                className="relative border-r transition-all duration-300 ease-in-out"
-              >
+            {/* Sidebar Panel - Always present but conditionally sized */}
+            <ResizablePanel
+              defaultSize={sidebarOpen ? 25 : 0}
+              minSize={sidebarOpen ? 15 : 0}
+              maxSize={sidebarOpen ? 40 : 0}
+              className="relative border-r"
+            >
+              <div className={`h-full ${sidebarOpen ? 'block' : 'hidden'}`}>
                 <DashboardSidebar />
-
-                {/* Toggle button, stuck to sidebar's right edge */}
+                
+                {/* Toggle button when sidebar is open */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -41,18 +41,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 >
                   <PanelLeft className="h-5 w-5" />
                 </Button>
-              </ResizablePanel>
-            )}
+              </div>
+            </ResizablePanel>
+            
+            <ResizableHandle withHandle className={sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} />
 
-            {sidebarOpen && <ResizableHandle withHandle />}
-
-            {/* Main Content */}
-            <ResizablePanel defaultSize={sidebarOpen ? 80 : 100} className="relative">
-              <div className="h-full overflow-auto transition-all duration-300 ease-in-out">
+            {/* Main Content Panel */}
+            <ResizablePanel 
+              defaultSize={sidebarOpen ? 75 : 100}
+              className="relative"
+            >
+              <div className="h-full overflow-auto">
                 {children}
               </div>
 
-              {/* When sidebar is closed, show button on left edge of main */}
+              {/* Toggle button when sidebar is closed */}
               {!sidebarOpen && (
                 <Button
                   variant="ghost"

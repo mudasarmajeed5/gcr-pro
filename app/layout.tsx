@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Poppins } from "next/font/google"
 import { Toaster } from "sonner";
 export const metadata: Metadata = {
-  title: "Class Hub, your personal GCR",
+  title: "GCR Pro",
   description: "Created with nextjs and typescript, by Mudassar Majeed, @mudasarmajeed5, generated for students studying in air university.",
 };
 const poppins = Poppins({

@@ -25,7 +25,7 @@ const Preferences = () => {
   } = userStore()
 
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, setError] = useState<string | null>(null)
 
   // Fetch settings only if store is empty
   const initializeSettings = async () => {
@@ -77,7 +77,6 @@ const Preferences = () => {
           <CardTitle className="flex items-center gap-2">Display Settings</CardTitle>
           <CardDescription>Customize what information is visible in your interface</CardDescription>
           <Separator />
-          {error && <span className="text-red-600">{error}</span>}
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
