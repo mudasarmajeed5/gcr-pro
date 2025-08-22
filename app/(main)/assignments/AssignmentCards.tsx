@@ -1,11 +1,14 @@
 /* eslint-disable */
 
+import { Suspense } from 'react'
 import { Calendar, AlertTriangle, BookOpen } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDueDate } from '@/utils/formatDueDate'
 import { Progress } from '@/components/ui/progress'
 import { useSearchParams } from 'next/navigation'
+import UILoading from '@/components/UILoading'
+
 interface AssignmentCardsProps {
     assignment: any
 }
@@ -46,9 +49,11 @@ const getStatusBadge = (assignment: any, filter: any) => {
 
     return null;
 }
-const AssignmentCards = ({ assignment }: AssignmentCardsProps) => {
+
+const AssignmentCardsContent = ({ assignment }: AssignmentCardsProps) => {
     const searchParams = useSearchParams();
     const filter = searchParams.get('filter') || 'graded';
+    
     return (
         <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
             <CardHeader className="flex-shrink-0">
@@ -63,7 +68,7 @@ const AssignmentCards = ({ assignment }: AssignmentCardsProps) => {
                         </CardDescription>
                     </div>
                     <div className="flex-shrink-0">
-                        {getStatusBadge(assignment,filter)}
+                        {getStatusBadge(assignment, filter)}
                     </div>
                 </div>
             </CardHeader>
@@ -136,6 +141,14 @@ const AssignmentCards = ({ assignment }: AssignmentCardsProps) => {
                 )}
             </CardContent>
         </Card>
+    )
+}
+
+const AssignmentCards = ({ assignment }: AssignmentCardsProps) => {
+    return (
+        <Suspense fallback={<UILoading />}>
+            <AssignmentCardsContent assignment={assignment} />
+        </Suspense>
     )
 }
 

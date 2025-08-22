@@ -1,9 +1,11 @@
 "use client"
+import { Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CheckCircle, XCircle, Clock, BookOpen } from 'lucide-react'
 import { ReactNode, useContext, createContext, useState } from 'react'
+import UILoading from '@/components/UILoading'
 
 // Create context for loading state
 const AssignmentsLayoutContext = createContext<{
@@ -20,7 +22,7 @@ interface AssignmentsLayoutProps {
   children: ReactNode;
 }
 
-const AssignmentsLayout = ({ children }: AssignmentsLayoutProps) => {
+const AssignmentsLayoutContent = ({ children }: AssignmentsLayoutProps) => {
     const { status } = useSession();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -84,6 +86,14 @@ const AssignmentsLayout = ({ children }: AssignmentsLayoutProps) => {
                 {children}
             </div>
         </AssignmentsLayoutContext.Provider>
+    );
+}
+
+const AssignmentsLayout = ({ children }: AssignmentsLayoutProps) => {
+    return (
+        <Suspense fallback={<UILoading />}>
+            <AssignmentsLayoutContent>{children}</AssignmentsLayoutContent>
+        </Suspense>
     );
 }
 

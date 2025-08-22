@@ -2,6 +2,7 @@
 
 "use client"
 
+import { Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -13,6 +14,7 @@ import {  CheckCircle, XCircle, AlertTriangle, BookOpen, Clock } from 'lucide-re
 import { useAssignmentsLayout } from './layout'
 import { useClassroomStore } from "@/store/classroom-store"
 import AssignmentCards from './AssignmentCards'
+import UILoading from '@/components/UILoading'
 
 // Helper functions
 const getDaysUntilDue = (assignment: any): number => {
@@ -41,7 +43,7 @@ const getDaysOverdue = (assignment: any): number => {
     return daysUntil < 0 ? Math.abs(daysUntil) : 0;
 };
 
-const Assignments = () => {
+const AssignmentsContent = () => {
     const { data: _session, status } = useSession();
     const searchParams = useSearchParams();
     const filter = searchParams.get('filter') || 'graded';
@@ -256,6 +258,14 @@ const Assignments = () => {
                 </div>
             )}
         </>
+    );
+}
+
+const Assignments = () => {
+    return (
+        <Suspense fallback={<UILoading />}>
+            <AssignmentsContent />
+        </Suspense>
     );
 }
 
