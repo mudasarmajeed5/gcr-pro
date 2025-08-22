@@ -1,0 +1,25 @@
+// models/UserSettings.ts
+import { Schema, model, models } from "mongoose";
+
+const UserSettingsSchema = new Schema(
+   {
+       userId: {
+           type: Schema.Types.ObjectId,
+           ref: 'Users',
+           required: true,
+           unique: true
+       },
+       showGradeCard: {
+           type: Boolean,
+           default: false
+       },
+       smtpPassword: {
+           type: String,
+           default: "",
+       }
+   },
+   { timestamps: true }
+);
+
+const UserSettings = models.UserSettings || model("UserSettings", UserSettingsSchema);
+export default UserSettings;

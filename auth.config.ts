@@ -4,6 +4,7 @@ declare module "next-auth" {
   interface Session {
     accessToken?: string;
     error?: string;
+    id?: string
   }
 }
 export default {
@@ -15,7 +16,7 @@ export default {
         params: {
           scope: [
             "openid",
-            "profile", 
+            "profile",
             "email",
             "https://www.googleapis.com/auth/classroom.courses.readonly",
             "https://www.googleapis.com/auth/classroom.rosters.readonly",
@@ -50,8 +51,8 @@ export default {
               "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({
-              client_id: process.env.GOOGLE_CLIENT_ID!,
-              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+              client_id: process.env.AUTH_GOOGLE_ID!,
+              client_secret: process.env.AUTH_GOOGLE_SECRET!,
               grant_type: "refresh_token",
               refresh_token: token.refreshToken as string,
             }),
@@ -80,6 +81,7 @@ export default {
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
+      session.user.id = token.sub as string;
       return session;
     },
   },

@@ -20,14 +20,19 @@ interface ProfessorListProps {
 
 export default function ProfessorList({ professors, selectedProfessor, onSelectProfessor }: ProfessorListProps) {
   if (!professors.length) return <p className="text-center py-4">No professors found.</p>
-
+  const uniqueProfessors = professors.reduce((acc, prof) => {
+    if (!acc.find(p => p.id === prof.id)) {
+      acc.push(prof);
+    }
+    return acc;
+  }, [] as typeof professors)
   return (
     <ScrollArea className="h-full">
       <div className="space-y-4 m-2">
         <h2 className="text-lg sticky z-2 px-4 py-2 top-1 dark:bg-black bg-gray-100 rounded-full font-semibold">
           Professors
         </h2>
-        {professors.map((prof, idx) => (
+        {uniqueProfessors.map((prof, idx) => (
           <Card
             key={`${prof.id}-index${idx}`}
             className={`shadow-sm cursor-pointer p-0 transition-colors ${selectedProfessor?.id === prof.id ? 'border-primary bg-primary/5' : ''}`}
