@@ -12,16 +12,18 @@ import { toast } from 'sonner'
 import { useSession } from 'next-auth/react'
 import { getSettings } from '@/actions/get-settings'
 import { userStore } from '@/store/user-store'
+import Link from 'next/link'
+import UILoading from '@/components/UILoading'
 
 const Preferences = () => {
   const { data: session, status } = useSession()
-  const { 
-    showGradeCard, 
-    setShowGradeCard, 
-    smtpPassword, 
-    setSmtpPassword 
+  const {
+    showGradeCard,
+    setShowGradeCard,
+    smtpPassword,
+    setSmtpPassword
   } = userStore()
-  
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,7 +62,7 @@ const Preferences = () => {
     }
   }
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <UILoading/>
 
   return (
     <form onSubmit={handleSaveSettings} className="max-w-2xl mx-auto p-6 space-y-6">
@@ -116,10 +118,10 @@ const Preferences = () => {
           <div className="bg-muted p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-2">Need help setting up an app password?</p>
             <Button variant="outline" size="sm" className="gap-2" asChild>
-              <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener noreferrer">
+              <Link href="/get-started" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
                 View Tutorial
-              </a>
+              </Link>
             </Button>
           </div>
         </CardContent>

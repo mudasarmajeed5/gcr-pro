@@ -27,7 +27,7 @@ export default function DashboardSidebar() {
         <div className="flex flex-col h-full">
             {/* Navigation Links */}
             <nav className="flex-1 p-4 space-y-2">
-                {sidebarItems.map((item, idx) => {
+                {sidebarItems.map((item) => {
                     const isActive = item.href === "/" ? isDashboardActive : pathname.startsWith(item.href)
                     return <SidebarItem
                         key={item.href}

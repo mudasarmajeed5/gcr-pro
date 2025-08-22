@@ -4,6 +4,7 @@ import {
     GraduationCap,
     MailIcon,
     SettingsIcon,
+    Sparkle
 } from 'lucide-react'
 export const sidebarItems = [
     {
@@ -30,5 +31,10 @@ export const sidebarItems = [
         href: '/settings',
         icon: SettingsIcon,
         label: 'Preferences'
+    },
+    {
+        href: "/get-started",
+        icon: Sparkle,
+        label: "Get started"
     }
 ]

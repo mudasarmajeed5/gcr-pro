@@ -17,15 +17,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCardSkeleton } from "./StatCarSkeleton";
-
+import { userStore } from "@/store/user-store"
+import { getSettings } from "@/actions/get-settings";
 export default function AssignmentsOverview() {
   const router = useRouter();
   const { data: session, status } = useSession();
-
+  const { showGradeCard, isLoaded, setShowGradeCard, setSmtpPassword } = userStore();
   // Get data and actions from the store
   const {
-    courses,
-    assignments,
     stats,
     isLoading,
     error,
@@ -46,24 +45,30 @@ export default function AssignmentsOverview() {
       console.error("Failed to refresh data:", error);
     }
   };
+  const initalizeSettings = async () => {
+    console.log("Function called")
+    if(isLoaded){
+      console.log("Returning cause data is loaded")
+      return;
+    }
+    const result = await getSettings();
+    if(result.success){
+      setShowGradeCard(result.message.showGradeCard)
+      setSmtpPassword(result.message.smtpPassword)
+    }
+  }
 
-  // Fetch data when component mounts or when user is authenticated
   useEffect(() => {
     if (status === "authenticated") {
       fetchClassroomData();
     }
   }, [status, fetchClassroomData]);
-
-  // Log the data for debugging (you can remove this later)
   useEffect(() => {
-    if (courses.length > 0 || assignments.length > 0) {
-      console.log("📚 Courses loaded:", courses);
-      console.log("📝 Assignments loaded:", assignments);
-      console.log("📊 Stats:", stats);
+    if (status === "authenticated" && !isLoaded) {
+      initalizeSettings()
     }
-  }, [courses, assignments, stats]);
+  }, [status]);
 
-  // Auto-refresh stale data
   useEffect(() => {
     if (status === "authenticated" && shouldRefresh()) {
       console.log("Data is stale, refreshing...");
@@ -72,7 +77,7 @@ export default function AssignmentsOverview() {
   }, [status, shouldRefresh, fetchClassroomData]);
 
   if (!session) {
-    return null; // Don't show anything if not authenticated
+    return null; 
   }
 
   if (error) {
@@ -136,8 +141,40 @@ export default function AssignmentsOverview() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3 mx-auto">
-          {/* Overall Grade Card */}
-          <Card className="border-border/50 shadow-sm">
+          {
+            showGradeCard && <Card className="border-border/50 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Overall Grade
+                </CardTitle>
+                <Target className="h-5 w-5 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-600 mb-3">
+                  {displayStats.percentage.toFixed(1)}%
+                </div>
+                <div className="mb-3">
+                  <Progress
+                    value={displayStats.percentage}
+                    className="h-2"
+                  />
+                </div>
+                <p className="text-sm flex justify-between items-center text-muted-foreground">
+                  <span>
+                    <span className="text-blue-600 font-medium">{displayStats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{displayStats.totalPoints}</span> points earned
+                  </span>
+                  <Button
+                    variant="link"
+                    className="p-0 text-sm cursor-pointer"
+                    onClick={() => handleViewDetails('graded')}
+                  >
+                    View Details
+                  </Button>
+                </p>
+              </CardContent>
+            </Card>
+          }
+          {/* <Card className="border-border/50 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Overall Grade
@@ -167,7 +204,7 @@ export default function AssignmentsOverview() {
                 </Button>
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Turned In Card */}
           <Card className="border-border/50 shadow-sm">

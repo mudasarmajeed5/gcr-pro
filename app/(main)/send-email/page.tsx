@@ -5,6 +5,7 @@ import EmailComposer from './EmailComposer'
 import { useEffect, useState } from 'react'
 import { getAllProfessors } from './actions/get-professor-details'
 import { RefreshCw } from 'lucide-react'
+import UILoading from '@/components/UILoading'
 
 interface Professor {
   id: string
@@ -45,7 +46,7 @@ export default function SendEmail() {
   }, [])
 
 
-  if (loading) return <p className="text-center h-full py-4 flex justify-center gap-4 items-center">Loading... <RefreshCw className="animate-spin size-5"/> </p>
+  if (loading) return <UILoading/>
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[500px] rounded-lg border">

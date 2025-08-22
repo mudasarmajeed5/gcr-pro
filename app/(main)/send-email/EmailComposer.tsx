@@ -172,9 +172,10 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
                         <Hint label='Complete with Gemini!'>
                             <button
                                 type="button"
-                                className="text-primary absolute right-2 top-8"
+                                className="text-primary border flex items-center gap-2 p-1 cursor-pointer rounded-md text-xs absolute right-2 top-8"
                                 onClick={() => generateEmailBody(emailData.body)}
                             >
+                                <span>Complete with AI</span>
                                 <Sparkles className="size-5" />
                             </button>
                         </Hint>
