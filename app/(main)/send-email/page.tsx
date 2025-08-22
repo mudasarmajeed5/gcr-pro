@@ -53,7 +53,7 @@ export default function SendEmail() {
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[500px] rounded-lg border">
       <ResizablePanel 
-        defaultSize={professorListOpen ? 70 : 100}
+        defaultSize={professorListOpen ? 60 : 100}
         className="relative"
       >
         <EmailComposer selectedProfessor={selectedProfessor} />
@@ -78,6 +78,7 @@ export default function SendEmail() {
           <ResizablePanel 
             defaultSize={30} 
             minSize={25}
+            maxSize={40}
             className="relative"
           >
             <ProfessorList

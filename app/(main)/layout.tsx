@@ -25,7 +25,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {/* Sidebar Panel - Always present but conditionally sized */}
             <ResizablePanel
               defaultSize={sidebarOpen ? 25 : 0}
-              minSize={sidebarOpen ? 15 : 0}
+              minSize={sidebarOpen ? 20 : 0}
               maxSize={sidebarOpen ? 40 : 0}
               className="relative border-r"
             >
