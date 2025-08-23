@@ -12,7 +12,8 @@ const GetStarted = () => {
       description: "Learn how to generate and configure an app password to send emails from the application.",
       icon: <Mail className="w-6 h-6" />,
       feature: "Email Functionality",
-      videoSrc: "/videos/app-password-setup.mp4",
+      videoSrc: "/videos/configure-smtp.mp4",
+      thumbnail: "/videos/configure-smtp.png"
     },
     {
       id: 2,
@@ -20,7 +21,8 @@ const GetStarted = () => {
       description: "Guide for downloading classroom materials (PDFs, PPTs, etc.).",
       icon: <Download className="w-6 h-6" />,
       feature: "Classroom Downloads",
-      videoSrc: "/videos/auth-user-setup.mp4",
+      videoSrc: "/videos/configure-auth-id.mp4",
+      thumbnail: "/videos/configure-auth-id.png"
     }
   ];
 
@@ -43,17 +45,25 @@ const GetStarted = () => {
         {/* Video Cards */}
         <div className="grid md:grid-cols-2 gap-6">
           {setupVideos.map((video) => (
-            <div key={video.id} className="rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+            <div
+              key={video.id}
+              className="rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200"
+            >
               {/* Video Thumbnail */}
-              <div 
+              <div
                 className="relative aspect-video rounded-t-xl flex items-center justify-center cursor-pointer overflow-hidden"
                 onClick={() => setSelectedVideo(video.videoSrc)}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Play className="w-8 h-8" />
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <Play className="w-8 h-8 text-white" />
                 </div>
                 {/* Feature Tag */}
-                <div className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-medium">
+                <div className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-thin dark:bg-black bg-white invert">
                   {video.feature}
                 </div>
               </div>
@@ -73,8 +83,8 @@ const GetStarted = () => {
                     </p>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   className="w-full mt-4 font-medium py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 border"
                   onClick={() => setSelectedVideo(video.videoSrc)}
                 >
@@ -85,6 +95,7 @@ const GetStarted = () => {
             </div>
           ))}
         </div>
+
 
         {/* Bottom Note */}
         <div className="mt-8 text-center">
@@ -99,16 +110,16 @@ const GetStarted = () => {
       {selectedVideo && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="relative w-full max-w-3xl p-4">
-            <button 
+            <button
               className="absolute top-2 right-2 text-white text-lg"
               onClick={() => setSelectedVideo(null)}
             >
               ✕
             </button>
-            <video 
-              src={selectedVideo} 
-              controls 
-              autoPlay 
+            <video
+              src={selectedVideo}
+              controls
+              autoPlay
               className="w-full rounded-lg"
             />
           </div>
