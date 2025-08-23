@@ -1,6 +1,6 @@
 {
-  "name": "au-gcr",
-  "version": "0.1.0",
+  "name": "gcr-pro",
+  "version": "1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -24,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
     "googleapis": "^156.0.0",
     "lucide-react": "^0.539.0",

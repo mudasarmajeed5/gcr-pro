@@ -6,8 +6,13 @@ import ProfessorList from './ProfessorsList'
 import EmailComposer from './EmailComposer'
 import { useEffect, useState } from 'react'
 import { getAllProfessors } from './actions/get-professor-details'
-import { RefreshCw } from 'lucide-react'
 import UILoading from '@/components/UILoading'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 
 interface Professor {
   id: string
@@ -17,11 +22,40 @@ interface Professor {
   avatar?: string
 }
 
+function ProfessorSidebar({ professors, selectedProfessor, onSelectProfessor }: {
+  professors: Professor[]
+  selectedProfessor: Professor | null
+  onSelectProfessor: (prof: Professor | null) => void
+}) {
+  return (
+    <Sidebar collapsible="offcanvas" side="right">
+      <SidebarContent>
+        <ProfessorList
+          professors={professors}
+          selectedProfessor={selectedProfessor}
+          onSelectProfessor={onSelectProfessor}
+        />
+      </SidebarContent>
+    </Sidebar>
+  )
+}
+
 export default function SendEmail() {
   const [professors, setProfessors] = useState<Professor[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null)
   const [professorListOpen, setProfessorListOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     const cached = sessionStorage.getItem('professors')
@@ -49,6 +83,24 @@ export default function SendEmail() {
   }, [])
 
   if (loading) return <UILoading/>
+
+  if (isMobile) {
+    return (
+      <SidebarProvider defaultOpen={false}>
+        <div className="flex-1">
+          <div className="min-h-[500px] rounded-lg border relative">
+            <EmailComposer selectedProfessor={selectedProfessor} />
+            <SidebarTrigger className="absolute top-2 right-2 z-50" />
+          </div>
+        </div>
+        <ProfessorSidebar 
+          professors={professors}
+          selectedProfessor={selectedProfessor}
+          onSelectProfessor={setSelectedProfessor}
+        />
+      </SidebarProvider>
+    )
+  }
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[500px] rounded-lg border">

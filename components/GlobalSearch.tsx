@@ -136,17 +136,34 @@ const GlobalSearch = () => {
         <>
             {/* Trigger Button */}
             <div className="flex-1 max-w-lg mx-6">
-                <Button
-                    variant="outline"
-                    className="relative w-full justify-start text-sm text-muted-foreground"
-                    onClick={() => setOpen(true)}
-                >
-                    <Search className="mr-2 h-4 w-4" />
-                    Search classes, assignments...
-                    <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                        <span className="text-xs">⌘</span>K
-                    </kbd>
-                </Button>
+                {/* Desktop / Tablet */}
+                <div className="hidden md:flex-1 md:flex md:justify-center md:mx-6">
+                    <div className="w-full max-w-lg">
+                        <Button
+                            variant="outline"
+                            className="relative w-full justify-start text-sm text-muted-foreground"
+                            onClick={() => setOpen(true)}
+                        >
+                            <Search className="mr-2 h-4 w-4" />
+                            Search classes, assignments...
+                            <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                                <span className="text-xs">⌘</span>K
+                            </kbd>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Mobile */}
+                <div className="md:hidden flex justify-center mx-6">
+                    <Button
+                        variant="outline"
+                        className="relative w-full max-w-xs justify-center rounded-full text-sm text-muted-foreground"
+                        onClick={() => setOpen(true)}
+                    >
+                        Search <Search className="ml-2 h-4 w-4" />
+                    </Button>
+                </div>
+
             </div>
 
             {/* Command Dialog */}

@@ -82,7 +82,7 @@ export default function AssignmentsOverview() {
 
   if (error) {
     return (
-      <div className="mb-6">
+      <div className="mb-6 p-5">
         <Alert variant="destructive">
           <AlertDescription className="flex items-center justify-between">
             <span>{error}</span>
@@ -113,7 +113,7 @@ export default function AssignmentsOverview() {
   };
 
   return (
-    <div className="mb-8 p-5 h-full">
+    <div className="mb-8 p-5 min-h-fit">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
@@ -129,18 +129,20 @@ export default function AssignmentsOverview() {
           className="flex items-center gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
+          <span className="hidden xl:inline-block">
+            Refresh
+          </span>
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-3 mx-auto">
+        <div className="grid xl:grid-cols-3 gap-3 mx-auto">
           {Array.from({ length: 4 }).map((_, index) => (
             <StatCardSkeleton key={index} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 mx-auto">
+        <div className="grid xl:grid-cols-3 gap-3 mx-auto">
           {
             showGradeCard && <Card className="border-border/50 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -174,37 +176,6 @@ export default function AssignmentsOverview() {
               </CardContent>
             </Card>
           }
-          {/* <Card className="border-border/50 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Overall Grade
-              </CardTitle>
-              <Target className="h-5 w-5 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600 mb-3">
-                {displayStats.percentage.toFixed(1)}%
-              </div>
-              <div className="mb-3">
-                <Progress
-                  value={displayStats.percentage}
-                  className="h-2"
-                />
-              </div>
-              <p className="text-sm flex justify-between items-center text-muted-foreground">
-                <span>
-                  <span className="text-blue-600 font-medium">{displayStats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{displayStats.totalPoints}</span> points earned
-                </span>
-                <Button
-                  variant="link"
-                  className="p-0 text-sm cursor-pointer"
-                  onClick={() => handleViewDetails('graded')}
-                >
-                  View Details
-                </Button>
-              </p>
-            </CardContent>
-          </Card> */}
 
           {/* Turned In Card */}
           <Card className="border-border/50 shadow-sm">

@@ -72,94 +72,120 @@ const ViewAssignment = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b sticky top-0 z-10 bg-background">
-        <div className="mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
+      <div className="border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+        <div className="mx-auto px-3 sm:px-6 py-2 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/assignments">
-              <div className="w-10 h-10 rounded-lg bg-gray-50/10 flex items-center justify-center hover:bg-muted transition">
-                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50/10 flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               </div>
             </Link>
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-lg font-medium">{course?.name || 'Course'}</h1>
-              <p className="text-sm text-muted-foreground">{course?.section}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm sm:text-lg font-medium truncate">{course?.name || "Course"}</h1>
+              <p className="text-xs text-muted-foreground truncate">{course?.section}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <Card className="mb-6">
-          <CardHeader className="border-b">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-xl mb-2">{assignment.title}</CardTitle>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+      <div className="mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-4xl">
+        <Card className="mb-4 sm:mb-6 shadow-sm">
+          <CardHeader className="border-b p-4 sm:p-6">
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:items-start sm:justify-between">
+              <div className="flex-1 space-y-2">
+                <CardTitle className="text-base sm:text-xl leading-tight pr-2">
+                  {assignment.title}
+                </CardTitle>
+
+                {/* Mobile-first due date layout */}
+                <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                   {assignment.dueDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>Due {formatDueDate()}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <span className="font-medium">Due {formatDueDate()}</span>
+                      </div>
                       {assignment.dueTime && (
-                        <>
-                          <Clock className="w-4 h-4 ml-2" />
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 flex-shrink-0" />
                           <span>{formatDueTime()}</span>
-                        </>
+                        </div>
                       )}
                     </div>
                   )}
                   {assignment.maxPoints && (
-                    <span>{assignment.maxPoints} points</span>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">{assignment.maxPoints} points</span>
+                    </div>
                   )}
                 </div>
               </div>
-              <Badge variant={getStatusVariant(assignment.submissionState)}>
-                {getStatusText(assignment.submissionState)}
-              </Badge>
+
+              {/* Badge positioning for mobile */}
+              <div className="flex justify-start sm:justify-end">
+                <Badge variant={getStatusVariant(assignment.submissionState)} className="text-xs">
+                  {getStatusText(assignment.submissionState)}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-6">
-            {/* Status Section - FIXED: Check submission state correctly */}
-            <div className="flex items-center justify-between mb-6 p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-3">
-                <User className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">Your work</p>
-                  <p className="text-sm text-muted-foreground">
-                    {isSubmitted ? 'Submitted' : 'Not submitted'}
-                    {assignment.late && <span className="text-destructive ml-2">(Late)</span>}
-                  </p>
+          <CardContent className="p-4 sm:p-6">
+            {/* Status Section - Better mobile layout */}
+            <div className="mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg">
+              <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-background rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm sm:text-base">Your work</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {isSubmitted ? "Submitted" : "Not submitted"}
+                      {assignment.late && <span className="text-destructive ml-1">(Late)</span>}
+                    </p>
+                  </div>
                 </div>
+
+                {assignment.assignedGrade !== undefined && (
+                  <div className="text-left sm:text-right pl-13 sm:pl-0">
+                    <p className="text-xl sm:text-2xl font-bold text-primary">
+                      {assignment.assignedGrade}
+                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      out of {assignment.maxPoints || "ungraded"}
+                    </p>
+                  </div>
+                )}
               </div>
-              {assignment.assignedGrade !== undefined && (
-                <div className="text-right">
-                  <p className="text-2xl font-semibold">{assignment.assignedGrade}</p>
-                  <p className="text-sm text-muted-foreground">
-                    out of {assignment.maxPoints || 'ungraded'}
-                  </p>
-                </div>
-              )}
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-4 sm:my-6" />
 
-            {/* Materials Section */}
+            {/* Materials Section - Enhanced mobile layout */}
             {assignment.materials && assignment.materials.length > 0 ? (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <FileText className="w-5 h-5" />
                   Materials
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({assignment.materials.length})
+                  </span>
                 </h3>
-                <div className="grid gap-3">
+
+                <div className="space-y-2 sm:space-y-3">
                   {assignment.materials.map((material: Material, idx: number) => (
-                    <div key={idx} className="border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div
+                      key={idx}
+                      className="border rounded-lg hover:bg-muted/50 transition-colors active:scale-[0.98] sm:active:scale-100"
+                    >
+                      {/* Google Drive */}
                       {material.driveFile && (
                         <div
-                          className="flex items-center gap-3 p-4 text-foreground hover:text-primary cursor-pointer"
+                          className="flex items-center gap-3 p-3 sm:p-4 text-foreground hover:text-primary cursor-pointer min-h-[60px]"
                           onClick={() =>
                             openPreview({
                               title: material.driveFile?.driveFile?.title ?? "",
@@ -168,65 +194,81 @@ const ViewAssignment = () => {
                               driveFileId: material.driveFile?.driveFile?.id ?? "",
                             })
                           }
-
                         >
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{material.driveFile.driveFile.title}</p>
-                            <p className="text-sm text-muted-foreground">Google Drive file</p>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="font-medium text-sm sm:text-base line-clamp-2">
+                              {material.driveFile.driveFile.title}
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              Google Drive file
+                            </p>
                           </div>
                         </div>
                       )}
 
+                      {/* Link */}
                       {material.link && (
                         <a
                           href={material.link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-4 text-foreground hover:text-primary"
+                          className="flex items-center gap-3 p-3 sm:p-4 text-foreground hover:text-primary min-h-[60px]"
                         >
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <LinkIcon className="w-5 h-5 text-green-600" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{material.link.title}</p>
-                            <p className="text-sm text-muted-foreground">Link</p>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="font-medium text-sm sm:text-base line-clamp-2">
+                              {material.link.title}
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Link</p>
                           </div>
                         </a>
                       )}
 
+                      {/* YouTube */}
                       {material.youtubeVideo && (
                         <a
                           href={material.youtubeVideo.alternateLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-4 text-foreground hover:text-primary"
+                          className="flex items-center gap-3 p-3 sm:p-4 text-foreground hover:text-primary min-h-[60px]"
                         >
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <Youtube className="w-5 h-5 text-red-600" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Youtube className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{material.youtubeVideo.title}</p>
-                            <p className="text-sm text-muted-foreground">YouTube video</p>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="font-medium text-sm sm:text-base line-clamp-2">
+                              {material.youtubeVideo.title}
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              YouTube video
+                            </p>
                           </div>
                         </a>
                       )}
 
+                      {/* Form */}
                       {material.form && (
                         <a
                           href={material.form.formUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-4 text-foreground hover:text-primary"
+                          className="flex items-center gap-3 p-3 sm:p-4 text-foreground hover:text-primary min-h-[60px]"
                         >
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-purple-600" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{material.form.title}</p>
-                            <p className="text-sm text-muted-foreground">Google Form</p>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="font-medium text-sm sm:text-base line-clamp-2">
+                              {material.form.title}
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              Google Form
+                            </p>
                           </div>
                         </a>
                       )}
@@ -235,17 +277,21 @@ const ViewAssignment = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No materials attached to this assignment</p>
+              <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                  <FileText className="w-8 h-8 sm:w-10 sm:h-10 opacity-50" />
+                </div>
+                <p className="text-sm sm:text-base font-medium mb-1">No materials yet</p>
+                <p className="text-xs sm:text-sm opacity-75">
+                  Materials will appear here when added
+                </p>
               </div>
             )}
-
-
           </CardContent>
         </Card>
       </div>
     </div>
+
   );
 };
 

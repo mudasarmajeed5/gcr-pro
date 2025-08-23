@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Header from "@/components/Header"
 import DashboardSidebar from "@/components/DashboardSidebar"
 import {
@@ -11,10 +11,55 @@ import {
 import { Button } from "@/components/ui/button"
 import { PanelLeft, PanelRight } from "lucide-react"
 import { MaterialPreviewModal } from "@/components/material-preview-modal"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+
+function AppSidebar() {
+  return (
+    <Sidebar collapsible="offcanvas" side="left">
+      <SidebarContent>
+        <DashboardSidebar />
+      </SidebarContent>
+    </Sidebar>
+  )
+}
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
+  if (isMobile) {
+    return (
+      <SidebarProvider defaultOpen={false}>
+        <MaterialPreviewModal />
+        <AppSidebar />
+        <main className="flex-1">
+          <Header />
+          <div className="h-[calc(100vh-70px)]">
+            <div className="h-full overflow-auto relative">
+              <SidebarTrigger className="absolute top-2 left-2 z-50" />
+              {children}
+            </div>
+          </div>
+        </main>
+      </SidebarProvider>
+    )
+  }
+
   return (
     <>
       <main>
@@ -24,7 +69,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <ResizablePanelGroup direction="horizontal">
             {/* Sidebar Panel - Always present but conditionally sized */}
             <ResizablePanel
-              defaultSize={sidebarOpen ? 25 : 0}
+              defaultSize={sidebarOpen ? 20 : 0}
               minSize={sidebarOpen ? 20 : 0}
               maxSize={sidebarOpen ? 40 : 0}
               className="relative border-r"
@@ -48,7 +93,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
             {/* Main Content Panel */}
             <ResizablePanel 
-              defaultSize={sidebarOpen ? 75 : 100}
+              defaultSize={sidebarOpen ? 80 : 100}
               className="relative"
             >
               <div className="h-full overflow-auto">

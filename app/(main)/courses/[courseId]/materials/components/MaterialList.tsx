@@ -132,7 +132,7 @@ const MaterialList = ({ materials, authId }: MaterialListProps) => {
                                 openInNewWindow(material)
                             }}
                         >
-                            Preview
+                            <span className='hidden md:inline-block'>Preview</span>
                             <ExternalLink className="w-4 h-4" />
                         </Button>
                         <Button
@@ -141,7 +141,7 @@ const MaterialList = ({ materials, authId }: MaterialListProps) => {
                             size="sm"
                             onClick={(e) => handleDownloadClick(e, material)}
                         >
-                            Download
+                            <span className='hidden md:inline-block'>Download</span>
                             <Download className="w-4 h-4" />
                         </Button>
                     </div>

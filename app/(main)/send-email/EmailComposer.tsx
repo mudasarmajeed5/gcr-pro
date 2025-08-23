@@ -23,6 +23,7 @@ interface EmailComposerProps {
 export default function EmailComposer({ selectedProfessor }: EmailComposerProps) {
     const { handleSendEmail, isLoading } = useEmailSender();
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const onSendEmail = async () => {
         await handleSendEmail(
@@ -67,6 +68,7 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
     }
     const generateEmailBody = async (body: string) => {
         try {
+            setIsGenerating(true);
             const res = await fetch('/api/generate-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,6 +83,8 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
             }));
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -111,9 +115,9 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
 
 
     if (!selectedProfessor) return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full p-6 mt-30">
             <div className="text-center space-y-2">
-                <p className="text-muted-foreground">Select a professor to compose an email</p>
+                <p className="text-muted-foreground">Select a Professor from right-sidebar to compose an email</p>
             </div>
         </div>
     )
@@ -169,10 +173,11 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
                             value={emailData.body}
                             onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
                         />
-                        <Hint label='Complete with Gemini!'>
+                        <Hint label='Autcomplete'>
                             <button
+                                disabled={isGenerating}
                                 type="button"
-                                className="text-primary border flex items-center gap-2 p-1 cursor-pointer rounded-md text-xs absolute right-2 top-8"
+                                className="text-primary border flex items-center gap-2 p-1 cursor-pointer rounded-md text-xs absolute right-2 top-8 disabled:animate-pulse disabled:text-yellow-500"
                                 onClick={() => generateEmailBody(emailData.body)}
                             >
                                 <span>Complete with AI</span>

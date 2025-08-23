@@ -84,56 +84,74 @@ const Materials = () => {
   return (
     <div className="space-y-4 p-6">
       {/* Header */}
-      <Link href={`/courses/${courseId}`}>
-        <Button variant="ghost" className="w-fit flex items-center gap-2">
-          <ArrowLeft /> <span>Back to Course</span>
-        </Button>
-      </Link>
-      <div className="flex items-center mt-5 justify-between">
-        <div className="flex items-center space-x-2">
-          <BookOpen className="h-10 w-10" />
-          <h2 className="text-2xl font-semibold">Course Materials</h2>
-          <Badge variant="secondary">
-            {courseMaterials.length} {courseMaterials.length === 1 ? 'item' : 'items'}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-1 items-center">
-            <Hint label="This should match the Google account currently signed in your browser to access shared files.">
-              <span className="text-md">Authentication Id &nbsp;&nbsp;</span>
-            </Hint>
+      <div className="">
+        <Link href={`/courses/${courseId}`}>
+          <Button variant="ghost" className="w-fit flex items-center gap-2">
+            <ArrowLeft /> <span>Back to Course</span>
+          </Button>
+        </Link>
 
-            <Button
-              onClick={() => {
-                if (authId === 0) return;
-                setAuthId((prev) => prev - 1)
-              }}
-              variant={"outline"} size={"icon"}>
-              <Minus />
-            </Button>
-            <Button variant={"outline"} size={"icon"}>
-              {authId}
-            </Button>
-            <Button
-              onClick={() => {
-                if (authId === 10) return;
-                setAuthId((prev) => prev + 1)
-              }}
-              variant={"outline"} size={"icon"}>
-              <Plus />
-            </Button>
+        <div className="flex flex-col md:flex-row md:items-center mt-5 md:justify-between gap-4">
+          {/* Left side */}
+          <div className="flex items-center space-x-2 justify-center md:justify-start">
+            <BookOpen className="h-8 w-8 md:h-10 md:w-10" />
+            <h2 className="text-xl md:text-2xl font-semibold text-center md:text-left">
+              Course Materials
+            </h2>
+            <Badge variant="secondary" className="text-sm md:text-base">
+              {courseMaterials.length} {courseMaterials.length === 1 ? "item" : "items"}
+            </Badge>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={onDownloadAll}
-            size="sm"
-          >
-            <Download className="w-4 h-4 mr-1" />
-            Download All
-          </Button>
+          {/* Right side */}
+          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+            <div className="flex gap-1 items-center">
+              <Hint label="This should match the Google account currently signed in your browser to access shared files.">
+                <span className="text-sm md:text-md text-center md:text-left">
+                  Authentication Id
+                </span>
+              </Hint>
+
+              <div className="flex gap-1">
+                <Button
+                  onClick={() => {
+                    if (authId === 0) return
+                    setAuthId((prev) => prev - 1)
+                  }}
+                  variant="outline"
+                  size="icon"
+                >
+                  <Minus />
+                </Button>
+                <Button variant="outline" size="icon">
+                  {authId}
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (authId === 10) return
+                    setAuthId((prev) => prev + 1)
+                  }}
+                  variant="outline"
+                  size="icon"
+                >
+                  <Plus />
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={onDownloadAll}
+              size="sm"
+              className="w-full md:w-auto"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Download All
+            </Button>
+          </div>
         </div>
       </div>
+
 
       {/* Material List */}
       <MaterialList materials={courseMaterials} authId={authId} />
