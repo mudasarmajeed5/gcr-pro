@@ -30,91 +30,82 @@ function AppSidebar() {
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
   
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-  
-  if (isMobile) {
-    return (
-      <SidebarProvider defaultOpen={false}>
-        <MaterialPreviewModal />
-        <AppSidebar />
-        <main className="flex-1">
-          <Header />
-          <div className="h-[calc(100vh-70px)]">
-            <div className="h-full overflow-auto relative">
-              <SidebarTrigger className="absolute top-2 left-2 z-50" />
-              {children}
-            </div>
-          </div>
-        </main>
-      </SidebarProvider>
-    )
-  }
-
   return (
     <>
-      <main>
-        <MaterialPreviewModal />
-        <Header />
-        <div className="h-[calc(100vh-70px)]">
-          <ResizablePanelGroup direction="horizontal">
-            {/* Sidebar Panel - Always present but conditionally sized */}
-            <ResizablePanel
-              defaultSize={sidebarOpen ? 20 : 0}
-              minSize={sidebarOpen ? 20 : 0}
-              maxSize={sidebarOpen ? 40 : 0}
-              className="relative border-r"
-            >
-              <div className={`h-full ${sidebarOpen ? 'block' : 'hidden'}`}>
-                <DashboardSidebar />
-                
-                {/* Toggle button when sidebar is open */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSidebarOpen(false)}
-                  className="absolute top-2 right-2 z-30"
-                >
-                  <PanelLeft className="h-5 w-5" />
-                </Button>
-              </div>
-            </ResizablePanel>
-            
-            <ResizableHandle withHandle className={sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} />
-
-            {/* Main Content Panel */}
-            <ResizablePanel 
-              defaultSize={sidebarOpen ? 80 : 100}
-              className="relative"
-            >
-              <div className="h-full overflow-auto">
+      <MaterialPreviewModal />
+      
+      {/* Mobile Layout - Only show on mobile screens */}
+      <div className="md:hidden">
+        <SidebarProvider defaultOpen={false}>
+          <AppSidebar />
+          <main className="flex-1">
+            <Header />
+                <SidebarTrigger className="absolute top-14 left-2 z-50" />
+            <div className="h-[calc(100vh-70px)]">
+              <div className="h-full overflow-auto relative">
                 {children}
               </div>
+            </div>
+          </main>
+        </SidebarProvider>
+      </div>
 
-              {/* Toggle button when sidebar is closed */}
-              {!sidebarOpen && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSidebarOpen(true)}
-                  className="absolute top-2 left-2 z-50"
-                >
-                  <PanelRight className="h-5 w-5" />
-                </Button>
-              )}
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
-      </main>
+      {/* Desktop Layout - Only show on desktop screens */}
+      <div className="hidden md:block">
+        <main>
+          <Header />
+          <div className="h-[calc(100vh-70px)]">
+            <ResizablePanelGroup direction="horizontal">
+              {/* Sidebar Panel - Always present but conditionally sized */}
+              <ResizablePanel
+                defaultSize={sidebarOpen ? 20 : 0}
+                minSize={sidebarOpen ? 20 : 0}
+                maxSize={sidebarOpen ? 40 : 0}
+                className="relative border-r"
+              >
+                <div className={`h-full ${sidebarOpen ? 'block' : 'hidden'}`}>
+                  <DashboardSidebar />
+                  
+                  {/* Toggle button when sidebar is open */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSidebarOpen(false)}
+                    className="absolute top-2 right-2 z-30"
+                  >
+                    <PanelLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle className={sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} />
+
+              {/* Main Content Panel */}
+              <ResizablePanel 
+                defaultSize={sidebarOpen ? 80 : 100}
+                className="relative"
+              >
+                <div className="h-full overflow-auto">
+                  {children}
+                </div>
+
+                {/* Toggle button when sidebar is closed */}
+                {!sidebarOpen && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSidebarOpen(true)}
+                    className="absolute top-2 left-2 z-50"
+                  >
+                    <PanelRight className="h-5 w-5" />
+                  </Button>
+                )}
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+        </main>
+      </div>
     </>
   )
 }

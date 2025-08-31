@@ -36,7 +36,7 @@ export default function Header() {
         {/* Left: Logo */}
         <Link
           href="/"
-          className="flex relative items-center gap-2 text-sm sm:text-base md:text-lg font-bold tracking-tight"
+          className="flex relative items-center gap-2 text-lg font-bold tracking-tight"
         >
           <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           <span>
@@ -101,7 +101,7 @@ export default function Header() {
       </div>
 
       {/* Mobile-only Search below header */}
-      <div className="px-4 py-2 md:hidden">
+      <div className="px-4 -mt-2 py-1 md:hidden">
         <GlobalSearch />
       </div>
     </header>

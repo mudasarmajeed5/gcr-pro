@@ -52,7 +52,7 @@ export default function RecentActivity() {
 
     return (
         <>
-            <Card className="col-span-3 lg:col-span-2 bg-transparent border-none">
+            <Card className="col-span-3 lg:col-span-2 bg-transparent border-none ">
                 <CardHeader>
                     <CardTitle className="text-lg">Recent Activity</CardTitle>
                 </CardHeader>
