@@ -154,13 +154,13 @@ const GlobalSearch = () => {
                 </div>
 
                 {/* Mobile */}
-                <div className="md:hidden flex justify-center mx-6">
+                <div className="md:hidden flex mx-6">
                     <Button
                         variant="outline"
-                        className="relative w-full max-w-xs justify-center rounded-full text-sm text-muted-foreground"
+                        className="relative w-full max-w-lg rounded-full text-sm text-muted-foreground flex justify-center"
                         onClick={() => setOpen(true)}
                     >
-                        Search <Search className="ml-2 h-4 w-4" />
+                        Search classes, assignments... <Search className="ml-2 h-4 w-4" />
                     </Button>
                 </div>
 

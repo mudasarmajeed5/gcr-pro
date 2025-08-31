@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { to, subject, content, attachments } = body;
 
-        if (to !== "mudasarmajeed5@gmail.com" || !subject || !content) {
+        if (!to || !subject || !content) {
             return NextResponse.json({
                 error: 'To, subject, and content are required'
             }, { status: 400 });

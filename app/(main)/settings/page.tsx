@@ -96,7 +96,7 @@ const Preferences = () => {
             <Mail className="h-5 w-5" />
             Email Configuration
           </CardTitle>
-          <CardDescription>Set up your SMTP app password for email notifications</CardDescription>
+          <CardDescription>Set up your SMTP app password for sending emails</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -117,7 +117,7 @@ const Preferences = () => {
           <div className="bg-muted p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-2">Need help setting up an app password?</p>
             <Button variant="outline" size="sm" className="gap-2" asChild>
-              <Link href="/get-started" target="_blank" rel="noopener noreferrer">
+              <Link href="/get-started">
                 <ExternalLink className="h-4 w-4" />
                 View Tutorial
               </Link>

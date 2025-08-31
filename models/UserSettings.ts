@@ -11,7 +11,7 @@ const UserSettingsSchema = new Schema(
        },
        showGradeCard: {
            type: Boolean,
-           default: false
+           default: true,
        },
        smtpPassword: {
            type: String,
