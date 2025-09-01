@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { StatCardSkeleton } from "./StatCarSkeleton";
 import { userStore } from "@/store/user-store"
 import { getSettings } from "@/actions/get-settings";
+
 export default function AssignmentsOverview() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -45,6 +46,7 @@ export default function AssignmentsOverview() {
       console.error("Failed to refresh data:", error);
     }
   };
+  
   const initalizeSettings = async () => {
     console.log("Function called")
     if(isLoaded){
@@ -63,6 +65,7 @@ export default function AssignmentsOverview() {
       fetchClassroomData();
     }
   }, [status, fetchClassroomData]);
+  
   useEffect(() => {
     if (status === "authenticated" && !isLoaded) {
       initalizeSettings()
@@ -75,6 +78,7 @@ export default function AssignmentsOverview() {
       fetchClassroomData();
     }
   }, [status, shouldRefresh, fetchClassroomData]);
+  
   if (error) {
     return (
       <div className="mb-6 p-5">
@@ -138,152 +142,169 @@ export default function AssignmentsOverview() {
         </div>
       ) : (
         <div className="grid xl:grid-cols-3 gap-3 mx-auto">
-          {
-            showGradeCard && <Card className="border-border/50 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Overall Grade
+          {showGradeCard && (
+            <div className="group relative">
+              {/* Backdrop overlay */}
+              <div className="fixed inset-0 bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out z-10 pointer-events-none" />
+              
+              <Card className="border-border/50 shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl group-hover:z-20 group-hover:border-blue-200 relative cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-blue-600 transition-colors duration-300">
+                    Overall Grade
+                  </CardTitle>
+                  <Target className="h-5 w-5 text-blue-500 group-hover:scale-110 transition-transform duration-300" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600 mb-3 group-hover:scale-105 transition-transform duration-300">
+                    {displayStats.percentage.toFixed(1)}%
+                  </div>
+                  <div className="mb-3">
+                    <Progress
+                      value={displayStats.percentage}
+                      className="h-2 group-hover:h-3 transition-all duration-300"
+                    />
+                  </div>
+                  <p className="text-sm flex justify-between items-center text-muted-foreground">
+                    <span>
+                      <span className="text-blue-600 font-medium">{displayStats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{displayStats.totalPoints}</span> points earned
+                    </span>
+                    <Button
+                      variant="link"
+                      className="p-0 text-sm cursor-pointer group-hover:text-blue-700 transition-colors duration-300"
+                      onClick={() => handleViewDetails('graded')}
+                    >
+                      View Details
+                    </Button>
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Turned In Card */}
+          <div className="group relative">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out z-10 pointer-events-none" />
+            
+            <Card className="border-border/50 shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl group-hover:z-20 group-hover:border-green-200 relative cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-green-600 transition-colors duration-300">
+                  Turned In
                 </CardTitle>
-                <Target className="h-5 w-5 text-blue-500" />
+                <CheckCircle className="h-5 w-5 text-green-500 group-hover:scale-110 transition-transform duration-300" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-600 mb-3">
-                  {displayStats.percentage.toFixed(1)}%
+                <div className="text-3xl font-bold text-green-600 mb-3 group-hover:scale-105 transition-transform duration-300">
+                  {displayStats.turnedIn}
                 </div>
                 <div className="mb-3">
                   <Progress
-                    value={displayStats.percentage}
-                    className="h-2"
+                    value={((displayStats.turnedIn / displayStats.totalAssignments) * 100)}
+                    className="h-2 group-hover:h-3 transition-all duration-300"
                   />
                 </div>
                 <p className="text-sm flex justify-between items-center text-muted-foreground">
-                  <span>
-                    <span className="text-blue-600 font-medium">{displayStats.earnedPoints}</span> / <span className="text-blue-600 font-medium">{displayStats.totalPoints}</span> points earned
-                  </span>
-                  <Button
-                    variant="link"
-                    className="p-0 text-sm cursor-pointer"
-                    onClick={() => handleViewDetails('graded')}
-                  >
-                    View Details
-                  </Button>
+                  {displayStats.totalAssignments > 0
+                    ? (
+                      <>
+                        <span>
+                          <span className="text-green-600 font-medium">
+                            {((displayStats.turnedIn / displayStats.totalAssignments) * 100).toFixed(1)}%
+                          </span> of assignments completed
+                        </span>
+                        <Button
+                          variant="link"
+                          className="p-0 text-sm cursor-pointer group-hover:text-green-700 transition-colors duration-300"
+                          onClick={() => handleViewDetails('turnedIn')}
+                        >
+                          View Details
+                        </Button>
+                      </>
+                    )
+                    : 'No assignments yet'
+                  }
                 </p>
               </CardContent>
             </Card>
-          }
-
-          {/* Turned In Card */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Turned In
-              </CardTitle>
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600 mb-3">
-                {displayStats.turnedIn}
-              </div>
-              <div className="mb-3">
-                <Progress
-                  value={((displayStats.turnedIn / displayStats.totalAssignments) * 100)}
-                  className="h-2"
-                />
-              </div>
-              <p className="text-sm flex justify-between items-center text-muted-foreground">
-                {displayStats.totalAssignments > 0
-                  ? (
-                    <>
-                      <span>
-                        <span className="text-green-600 font-medium">
-                          {((displayStats.turnedIn / displayStats.totalAssignments) * 100).toFixed(1)}%
-                        </span> of assignments completed
-                      </span>
-                      <Button
-                        variant="link"
-                        className="p-0 text-sm cursor-pointer"
-                        onClick={() => handleViewDetails('turnedIn')}
-                      >
-                        View Details
-                      </Button>
-                    </>
-                  )
-                  : 'No assignments yet'
-                }
-              </p>
-            </CardContent>
-          </Card>
+          </div>
 
           {/* Unsubmitted Card */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Unsubmitted
-              </CardTitle>
-              <Clock className="h-5 w-5 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600 mb-3">
-                {displayStats.unsubmitted}
-              </div>
-              <div className="py-2 bg-transparent">
-              </div>
-              <p className="text-sm text-muted-foreground flex justify-between items-center">
-                {displayStats.unsubmitted > 0
-                  ? (
-                    <>
-                      <span>
-                        <span className="text-orange-600 font-medium">{displayStats.unsubmitted}</span> assignments pending</span>
-                      <Button
-                        variant="link"
-                        className="p-0 text-sm cursor-pointer"
-                        onClick={() => handleViewDetails('unsubmitted')}
-                      >
-                        View Details
-                      </Button>
-                    </>
-                  )
-                  : 'All caught up!'
-                }
-              </p>
-            </CardContent>
-          </Card>
+          <div className="group relative">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out z-10 pointer-events-none" />
+            
+            <Card className="border-border/50 shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl group-hover:z-20 group-hover:border-orange-200 relative cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-orange-600 transition-colors duration-300">
+                  Unsubmitted
+                </CardTitle>
+                <Clock className="h-5 w-5 text-orange-500 group-hover:scale-110 transition-transform duration-300" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-orange-600 mb-3 group-hover:scale-105 transition-transform duration-300">
+                  {displayStats.unsubmitted}
+                </div>
+                <div className="py-2 bg-transparent">
+                </div>
+                <p className="text-sm text-muted-foreground flex justify-between items-center">
+                  {displayStats.unsubmitted > 0
+                    ? (
+                      <>
+                        <span>
+                          <span className="text-orange-600 font-medium">{displayStats.unsubmitted}</span> assignments pending</span>
+                        <Button
+                          variant="link"
+                          className="p-0 text-sm cursor-pointer group-hover:text-orange-700 transition-colors duration-300"
+                          onClick={() => handleViewDetails('unsubmitted')}
+                        >
+                          View Details
+                        </Button>
+                      </>
+                    )
+                    : 'All caught up!'
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Missed Card */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Missed
-              </CardTitle>
-              <XCircle className="h-5 w-5 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600 mb-3">
-                {displayStats.missed}
-              </div>
-              <div className="py-2 bg-transparent">
-              </div>
-              <p className="text-sm flex justify-between items-center text-muted-foreground">
-                {displayStats.missed > 0
-                  ? (
-                    <>
-                      <span>
-                        <span className="text-red-600 font-medium">{displayStats.missed}</span> overdue assignments
-                      </span>
-                      <Button
-                        variant="link"
-                        className="p-0 text-sm cursor-pointer"
-                        onClick={() => handleViewDetails('missed')}
-                      >
-                        View Details
-                      </Button>
-                    </>
-                  )
-                  : 'No missed work'
-                }
-              </p>
-            </CardContent>
-          </Card>
+          <div className="group relative">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out z-10 pointer-events-none" />
+            
+            <Card className="border-border/50 shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl group-hover:z-20 group-hover:border-red-200 relative cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-red-600 transition-colors duration-300">
+                  Missed
+                </CardTitle>
+                <XCircle className="h-5 w-5 text-red-500 group-hover:scale-110 transition-transform duration-300" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-600 mb-3 group-hover:scale-105 transition-transform duration-300">
+                  {displayStats.missed}
+                </div>
+                <div className="py-2 bg-transparent">
+                </div>
+                <p className="text-sm flex justify-between items-center text-muted-foreground">
+                  {displayStats.missed > 0
+                    ? (
+                      <>
+                        <span>
+                          <span className="text-red-600 font-medium">{displayStats.missed}</span> overdue assignments
+                        </span>
+                        <Button
+                          variant="link"
+                          className="p-0 text-sm cursor-pointer group-hover:text-red-700 transition-colors duration-300"
+                          onClick={() => handleViewDetails('missed')}
+                        >
+                          View Details
+                        </Button>
+                      </>
+                    )
+                    : 'No missed work'
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>
