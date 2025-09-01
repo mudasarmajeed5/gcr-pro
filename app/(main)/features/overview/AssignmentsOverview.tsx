@@ -75,11 +75,6 @@ export default function AssignmentsOverview() {
       fetchClassroomData();
     }
   }, [status, shouldRefresh, fetchClassroomData]);
-
-  if (!session) {
-    return null; 
-  }
-
   if (error) {
     return (
       <div className="mb-6 p-5">

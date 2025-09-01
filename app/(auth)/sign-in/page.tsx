@@ -22,7 +22,7 @@ export default function SignIn() {
                 <CardHeader className="text-center space-y-3 px-6 pt-8">
                     <CardTitle className="text-3xl font-bold tracking-tight flex items-center justify-center gap-2">
                         <LogIn className="w-7 h-7 text-primary" />
-                        Welcome to <span className="text-primary">AU GCR</span>
+                        Welcome to <span className="text-primary">GCR PRO</span>
                     </CardTitle>
                     <CardDescription className="text-base text-muted-foreground">
                         A smarter, more accessible Google Classroom experience
