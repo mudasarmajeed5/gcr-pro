@@ -25,7 +25,7 @@ export default function SignIn() {
                         Welcome to <span className="text-primary">GCR PRO</span>
                     </CardTitle>
                     <CardDescription className="text-base text-muted-foreground">
-                        A smarter, more accessible Google Classroom experience
+                        Enhance your Google Classroom experience. Sign in with your student email for smarter, easier access.
                     </CardDescription>
                 </CardHeader>
 
