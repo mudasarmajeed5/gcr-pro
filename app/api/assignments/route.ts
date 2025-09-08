@@ -54,13 +54,6 @@ type FilteredAssignment =
 
 
 
-type FilteredAssignmentsByType<T extends string> = 
-    T extends "graded" ? GradedAssignment[] :
-    T extends "turnedIn" ? TurnedInAssignment[] :
-    T extends "unsubmitted" ? UnsubmittedAssignment[] :
-    T extends "missed" ? MissedAssignment[] :
-    FilteredAssignment[];
-
 interface StudentSubmission {
     courseWorkId: string;
     state: string;

@@ -1,10 +1,16 @@
-import withPWA from 'next-pwa'
+// next.config.ts
+import type { NextConfig } from "next";
+import createNextPWA from "next-pwa";
 
-const nextConfig = {
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+const withPWA = createNextPWA({
+  dest: "public",
   register: true,
-  skipWaiting: true
-}
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+});
 
-export default withPWA(nextConfig)
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+};
+
+export default withPWA(nextConfig as any); // Type assertion workaround

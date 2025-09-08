@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, GraduationCap, LogOut } from "lucide-react"
+import {  GraduationCap, LogOut } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
 import GlobalSearch from "./GlobalSearch"
 import { FaGithub, FaStar } from "react-icons/fa"
