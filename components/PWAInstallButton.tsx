@@ -15,7 +15,10 @@ export function PWAInstallButton() {
   const [showInstall, setShowInstall] = useState(false)
 
   useEffect(() => {
+    console.log('PWA Install Button: Component mounted')
+    
     const handleBeforeInstallPrompt = (e: any) => {
+      console.log('PWA Install Button: beforeinstallprompt event fired')
       e.preventDefault()
       setDeferredPrompt(e)
       setShowInstall(true)
@@ -23,8 +26,20 @@ export function PWAInstallButton() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    // Check if already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    console.log('PWA Install Button: Is standalone mode?', isStandalone)
+    
+    if (isStandalone) {
       setShowInstall(false)
+      console.log('PWA Install Button: Already installed, hiding button')
+    }
+
+    // Check if service worker is registered
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(() => {
+        console.log('PWA Install Button: Service worker is ready')
+      })
     }
 
     return () => {
@@ -33,14 +48,21 @@ export function PWAInstallButton() {
   }, [])
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
+    console.log('PWA Install Button: Install button clicked')
+    if (!deferredPrompt) {
+      console.log('PWA Install Button: No deferred prompt available')
+      return
+    }
 
     deferredPrompt.prompt()
-    await deferredPrompt.userChoice
+    const choiceResult = await deferredPrompt.userChoice
+    console.log('PWA Install Button: User choice:', choiceResult.outcome)
     
     setDeferredPrompt(null)
     setShowInstall(false)
   }
+
+  console.log('PWA Install Button: Render - showInstall:', showInstall, 'deferredPrompt:', !!deferredPrompt)
 
   if (!showInstall) return null
 

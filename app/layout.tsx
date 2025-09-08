@@ -20,6 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={poppins.className}>
+      <link rel="manifest" href="/manifest.json" />
       <body>
         <ThemeProvider
           attribute="class"
@@ -28,7 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>
-            <Toaster/>
+            <Toaster />
             <div className="h-full">
               {children}
             </div>
