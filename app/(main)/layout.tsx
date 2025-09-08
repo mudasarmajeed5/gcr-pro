@@ -41,7 +41,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <AppSidebar />
           <main className="flex-1">
             <Header />
-                <SidebarTrigger className="absolute top-14 left-2 z-50" />
+                <SidebarTrigger className="absolute top-18 left-2 z-50 size-9" />
             <div className="h-[calc(100vh-70px)]">
               <div className="h-full overflow-auto relative">
                 {children}

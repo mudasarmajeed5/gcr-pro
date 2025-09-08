@@ -13,11 +13,13 @@ export default function DashboardSidebar() {
         const now = new Date()
         const year = now.getFullYear()
         const month = now.getMonth() + 1
+        const day = now.getDate()
 
-        if (month >= 2 || month <= 9) {
-            return `Spring ${year}`
-        } else {
+        // Fall: Sept 15 to Jan 31
+        if ((month === 9 && day >= 15) || month >= 10 || month === 1) {
             return `Fall ${year}`
+        } else {
+            return `Spring ${year}`
         }
     }
 
