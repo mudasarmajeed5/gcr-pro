@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
         description: "Enhance your Google Classroom experience. Sign in with your student email for smarter, easier access.",
         start_url: "/",
         display: "standalone",
-        background_color: "#ffffff",
+        background_color: "#000000",
         theme_color: "#000000",
         screenshots: [
             {
