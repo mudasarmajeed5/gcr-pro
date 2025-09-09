@@ -24,15 +24,43 @@ export default function manifest(): MetadataRoute.Manifest {
             }
         ],
         icons: [
+            // Small sizes - for taskbar, search, favicon (hat only)
             {
-                src: '/manifest-icon-192.maskable.png',
-                sizes: '192x192',
+                src: '/icon-hat-16.png',
+                sizes: '16x16',
                 type: 'image/png',
+                purpose: 'any'
             },
             {
-                src: '/manifest-icon-512.maskable.png',
+                src: '/icon-hat-48.png',
+                sizes: '48x48',
+                type: 'image/png',
+                purpose: 'any'
+            },
+            {
+                src: '/icon-hat-32.png',
+                sizes: '32x32',
+                type: 'image/png',
+                purpose: 'any'
+            },
+            {
+                src: '/icon-hat-96.png',
+                sizes: '96x96',
+                type: 'image/png',
+                purpose: 'any'
+            },
+            // Large sizes - for app launcher, desktop shortcuts (hat only)
+            {
+                src: '/icon-192x192.png',
+                sizes: '192x192',
+                type: 'image/png',
+                purpose: 'any'
+            },
+            {
+                src: '/icon-512x512.png',
                 sizes: '512x512',
                 type: 'image/png',
+                purpose: 'any'
             },
         ],
     }

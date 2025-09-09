@@ -21,7 +21,7 @@ import { userStore } from "@/store/user-store"
 import { getSettings } from "@/actions/get-settings";
 export default function AssignmentsOverview() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { showGradeCard, isLoaded, setShowGradeCard, setSmtpPassword } = userStore();
   // Get data and actions from the store
   const {

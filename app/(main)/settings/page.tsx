@@ -25,7 +25,7 @@ const Preferences = () => {
   } = userStore()
 
   const [loading, setLoading] = useState(true)
-  const [_error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch settings only if store is empty
   const initializeSettings = async () => {
@@ -62,7 +62,7 @@ const Preferences = () => {
     }
   }
 
-  if (loading) return <UILoading/>
+  if (loading) return <UILoading />
 
   return (
     <form onSubmit={handleSaveSettings} className="max-w-2xl mx-auto p-6 space-y-6">
