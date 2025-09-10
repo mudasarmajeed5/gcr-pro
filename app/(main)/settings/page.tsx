@@ -54,13 +54,12 @@ const Preferences = () => {
     const res = await saveSettings(formData)
     if (res.success) {
       toast.success(res.message)
-      // update store with saved values
       setSmtpPassword(formData.get("smtpPassword") as string)
-      setShowGradeCard(formData.get("showGradeCard") === "true")
     } else {
       toast.error(res.message)
     }
   }
+
 
   if (loading) return <UILoading />
 
@@ -86,6 +85,7 @@ const Preferences = () => {
             </Label>
             <Switch id="showGradeCard" name="showGradeCard" checked={showGradeCard} onCheckedChange={setShowGradeCard} />
             <input type="hidden" name="showGradeCard" value={showGradeCard ? "true" : "false"} />
+
           </div>
         </CardContent>
       </Card>
