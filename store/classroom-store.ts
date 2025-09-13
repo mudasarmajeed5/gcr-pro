@@ -41,7 +41,7 @@ interface ClassroomStore {
     reset: () => void;
 }
 
-const CACHE_DURATION = 10 * 60 * 1000;
+const CACHE_DURATION = 30 * 60 * 1000;
 
 export const useClassroomStore = create<ClassroomStore>()(
     persist(
