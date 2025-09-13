@@ -17,6 +17,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useSession } from "next-auth/react"
 
 function AppSidebar() {
   return (
@@ -30,18 +31,34 @@ function AppSidebar() {
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const { data: session, status } = useSession();
   
+  // Show loading state while checking session
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
+  // Return children without layout wrapper for unauthenticated users
+  if (!session) {
+    return <>{children}</>
+  }
+
+  // Full layout for authenticated users
   return (
     <>
       <MaterialPreviewModal />
-      
+
       {/* Mobile Layout - Only show on mobile screens */}
       <div className="md:hidden">
         <SidebarProvider defaultOpen={false}>
           <AppSidebar />
           <main className="flex-1">
             <Header />
-                <SidebarTrigger className="absolute top-18 left-2 z-50 size-9" />
+            <SidebarTrigger className="absolute top-18 left-2 z-50 size-9" />
             <div className="h-[calc(100vh-70px)]">
               <div className="h-full overflow-auto relative">
                 {children}
@@ -66,7 +83,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               >
                 <div className={`h-full ${sidebarOpen ? 'block' : 'hidden'}`}>
                   <DashboardSidebar />
-                  
+
                   {/* Toggle button when sidebar is open */}
                   <Button
                     variant="ghost"
@@ -78,11 +95,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   </Button>
                 </div>
               </ResizablePanel>
-              
+
               <ResizableHandle withHandle className={sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} />
 
               {/* Main Content Panel */}
-              <ResizablePanel 
+              <ResizablePanel
                 defaultSize={sidebarOpen ? 80 : 100}
                 className="relative"
               >
