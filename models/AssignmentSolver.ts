@@ -6,6 +6,7 @@ export interface IAssignmentSolver extends Document {
   originalName: string;
   status: 'pending' | 'solved';
   solvedFileId?: mongoose.Types.ObjectId;
+  solvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

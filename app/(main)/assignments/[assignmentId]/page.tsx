@@ -314,16 +314,10 @@ const ViewAssignment = () => {
                       type="file"
                       accept=".docx"
                       onChange={handleFileSelect}
-                      className="hidden"
                       id="file-input"
                       disabled={isSolving}
+                      style={{ display: 'block', margin: '0 auto 1rem auto' }}
                     />
-                    <label
-                      htmlFor="file-input"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors"
-                    >
-                      Choose File
-                    </label>
                     {selectedFile && (
                       <div className="mt-4 text-sm text-gray-700">
                         Selected: {selectedFile.name}

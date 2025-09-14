@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const solution = await callGeminiAPI(extractedText);
 
     // Create solved document
-    const solvedDocBuffer = await createSolvedDocument(file.name, solution);
+    const solvedDocBuffer = await createSolvedDocument(file.name, solution, { name: session.user.name || 'Student', roll_number: session.user?.email?.split("@")[0] || 'N/A' });
 
     // Upload solved document to GridFS
     const solvedFileId = await uploadToGridFS(
@@ -84,14 +84,25 @@ export async function POST(request: NextRequest) {
       { upsert: true, new: true }
     );
 
-    // Return the solved file as a download response
-    return new NextResponse(solvedDocBuffer, {
+    const solvedArrayBuffer = Buffer.isBuffer(solvedDocBuffer)
+      ? solvedDocBuffer.buffer.slice(solvedDocBuffer.byteOffset, solvedDocBuffer.byteOffset + solvedDocBuffer.byteLength)
+      : solvedDocBuffer;
+    const solvedBuffer = Buffer.isBuffer(solvedArrayBuffer)
+      ? solvedArrayBuffer
+      : Buffer.from(solvedArrayBuffer);
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(solvedBuffer));
+        controller.close();
+      }
+    });
+    return new NextResponse(stream, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="solved_${file.name}"`,
-        'x-solved-file-id': solvedFileId.toString(),
-        'x-assignment-id': assignmentMeta._id.toString(),
+        'x-solved-file-id': solvedFileId ? solvedFileId.toString() : String(solvedFileId),
+        'x-assignment-id': assignmentMeta?._id ? assignmentMeta._id.toString() : String(assignmentMeta?._id),
       },
     });
   } catch (error) {
