@@ -4,10 +4,11 @@ import { useSession } from "next-auth/react";
 import AssignmentsOverview from "./features/overview/AssignmentsOverview";
 import RecentActivity from "./features/overview/RecentActivity";
 import LandingPage from "./features/landing/landing-page"; // You'll need to create this component
+import useAuthUser from "@/hooks/use-auth-user";
 
 export default function Home() {
   const { data: session, status } = useSession();
-
+  const authuser = useAuthUser();
   // Show loading state while checking session
   if (status === "loading") {
     return (

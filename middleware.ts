@@ -5,18 +5,31 @@ import authConfig from "./auth.config"
 const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
-  const { pathname } = req.nextUrl
+  const { pathname, searchParams } = req.nextUrl
   const isAuthenticated = !!req.auth
 
+  // Intercept Google OAuth callback to capture authuser (GET requests only)
+  if (pathname === "/api/auth/callback/google" && req.method === "GET") {
+    const authuser = searchParams.get("authuser")
+    if (authuser) {
+      const response = NextResponse.next()
+      response.cookies.set("authuser", authuser, { httpOnly: true });
+      return response
+    }
+  }
+
+  // Skip middleware for other auth routes to avoid breaking NextAuth
+  if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next()
+  }
+
   // Root path allows both authenticated and unauthenticated users
-  // Component will handle conditional rendering based on session
   if (pathname === "/") {
     return NextResponse.next()
   }
 
   // Allow access to sign-in page for everyone
   if (pathname === "/sign-in") {
-    // Optionally redirect authenticated users away from sign-in
     if (isAuthenticated) {
       return NextResponse.redirect(new URL("/", req.url))
     }
@@ -33,6 +46,6 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.json|manifest|icon-192x192.png|icon-512x512.png|sign-in).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest|icon-192x192.png|icon-512x512.png|sign-in).*)",
   ],
 }

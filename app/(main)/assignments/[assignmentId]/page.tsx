@@ -13,9 +13,10 @@ import Link from "next/link";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import useAuthUser from "@/hooks/use-auth-user";
 const ViewAssignment = () => {
   const [instructions, setInstructions] = useState('');
-
+  const authId = useAuthUser();
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
   const { openPreview } = usePreviewStore();
@@ -28,7 +29,6 @@ const ViewAssignment = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const handleMaterialDownload = (material: Material) => {
-    let authId = 0;
     const fileId = material.driveFile?.driveFile?.id;
     const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
     const iframe = document.createElement("iframe");
@@ -324,7 +324,7 @@ const ViewAssignment = () => {
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-4 ${isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-gray-400'}`}
                   >
                     <FileText className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                    <p className="text-lg font-medium text-gray-900 mb-2">
+                    <p className="text-lg font-medium text-muted-foreground mb-2">
                       Drag & drop your .docx material here
                     </p>
                     <p className="text-sm text-gray-500 mb-4">
@@ -417,10 +417,19 @@ const ViewAssignment = () => {
                               Google Drive file
                             </p>
                           </div>
-                          <Button onClick={() => handleMaterialDownload(material)} variant="outline" size="sm" disabled={isDownloading}>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMaterialDownload(material);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            disabled={isDownloading}
+                          >
                             <DownloadIcon className="w-4 h-4" />
                             <span className="hidden md:inline">Download</span>
                           </Button>
+
                         </div>
                       )}
 

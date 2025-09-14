@@ -33,7 +33,6 @@ function AppSidebar() {
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { data: session, status } = useSession();
-
   // Show loading state while checking session
   if (status === "loading") {
     return <UILoading />

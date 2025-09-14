@@ -8,19 +8,24 @@ import { usePreviewStore } from '@/store/preview-store';
 import { formatDate } from '@/utils/formatDate';
 interface MaterialListProps {
     materials: CourseWorkMaterial[];
-    authId: number
+    authId: number | null
 }
 
 const MaterialList = ({ materials, authId }: MaterialListProps) => {
     const { openPreview } = usePreviewStore();
     const downloadFile = (fileId: string) => {
+        if (!authId) {
+            alert("User not authenticated. Please sign in again.");
+            return;
+        }
         const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = ""; 
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 5000); // 5 seconds
     };
 
 
