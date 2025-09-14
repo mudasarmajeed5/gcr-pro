@@ -15,15 +15,6 @@ const GetStarted = () => {
       videoSrc: "/videos/configure-smtp.mp4",
       thumbnail: "/videos/configure-smtp.png"
     },
-    {
-      id: 2,
-      title: "Configure Auth User",
-      description: "Guide for downloading classroom materials (PDFs, PPTs, etc.).",
-      icon: <Download className="w-6 h-6" />,
-      feature: "Classroom Downloads",
-      videoSrc: "/videos/configure-auth-id.mp4",
-      thumbnail: "/videos/configure-auth-id.png"
-    }
   ];
 
   return (
