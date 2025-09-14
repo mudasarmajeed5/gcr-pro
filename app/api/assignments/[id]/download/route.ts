@@ -18,7 +18,7 @@ export async function GET(
 
     // Await params and convert to ObjectId if needed
     const { id } = await context.params;
-    let assignmentId = id;
+    const assignmentId = id;
 
     const assignment = await AssignmentSolver.findOne({
       fileId: assignmentId,

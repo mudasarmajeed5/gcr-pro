@@ -7,8 +7,18 @@ import { connectDB } from '@/lib/connectDB';
 import AssignmentSolver from '@/models/AssignmentSolver';
 
 async function callGeminiAPI(text: string, instructions: string): Promise<string> {
-  const prompt = `Please provide a comprehensive solution to the following assignment. Be thorough, accurate, and well-structured in your response:\n\n${text}\n\nInstructions:\n${instructions}`;
+  const prompt = `
+You are given an assignment extracted from a DOCX file (raw text via Mammoth). 
+Carefully read and interpret the assignment text below, then provide a complete, 
+well-structured, and accurate solution.
+Assignment (raw text):
+${text}
+Additional Instructions:
+${instructions}
 
+When writing the solution:
+- Organize the content clearly (sections, headings, bullet points where needed).
+`;
 
   const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",

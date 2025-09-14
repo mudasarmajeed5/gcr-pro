@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, PageBreak, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
@@ -27,7 +28,6 @@ export async function createSolvedDocument(
 ): Promise<Buffer> {
   // Parse markdown content
   const parsedMarkdown = await parseMarkdownToDocxElements(solvedContent);
-
   // Load logo image
   let logoImage: ImageRun | null = null;
   try {
