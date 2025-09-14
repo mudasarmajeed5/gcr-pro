@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToGridFS } from '@/lib/gridfs';
-import { extractTextFromDocx, createSolvedDocument } from '@/utils/documentUtils';
+import { createSolvedDocument } from '@/utils/documentUtils';
+import { extractTextFromDocx } from '@/utils/extract-title';
 import { auth } from '@/auth';
 import { connectDB } from '@/lib/connectDB';
 import AssignmentSolver from '@/models/AssignmentSolver';
 
-async function callGeminiAPI(text: string): Promise<string> {
-  const prompt = `Please provide a comprehensive solution to the following assignment. Be thorough, accurate, and well-structured in your response:\n\n${text}`;
+async function callGeminiAPI(text: string, instructions: string): Promise<string> {
+  const prompt = `Please provide a comprehensive solution to the following assignment. Be thorough, accurate, and well-structured in your response:\n\n${text}\n\nInstructions:\n${instructions}`;
 
 
   const response = await fetch(
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const fileId = formData.get('fileId') as string | null;
-
+    const instructions = formData.get('instructions') as string | null;
     if (!file || !fileId) {
       return NextResponse.json({ error: 'No file or fileId uploaded' }, { status: 400 });
     }
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     const extractedText = await extractTextFromDocx(buffer);
 
     // Solve with Gemini
-    const solution = await callGeminiAPI(extractedText);
+    const solution = await callGeminiAPI(extractedText, instructions || '');
 
     // Create solved document
     const solvedDocBuffer = await createSolvedDocument(file.name, solution, { name: session.user.name || 'Student', roll_number: session.user?.email?.split("@")[0] || 'N/A' });

@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 const ViewAssignment = () => {
-
+  const [instructions,setInstructions] = useState('')
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
   const { openPreview } = usePreviewStore();
@@ -81,6 +83,7 @@ const ViewAssignment = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('fileId', assignmentId as string);
+      formData.append("instructions", instructions)
       const response = await fetch('/api/assignments/solve', {
         method: 'POST',
         body: formData,
@@ -283,15 +286,16 @@ const ViewAssignment = () => {
                 <button
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isDownloading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white ml-2`}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isDownloading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white ml-2`}
                 >
                   {isDownloading ? (
                     <>
-                      <span className="animate-spin mr-2">⏳</span>Downloading...
+                      <span className="inline-block w-4 h-4 bborder-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Downloading...
                     </>
                   ) : (
                     <>
-                      <span className="mr-2">⬇️</span>Download Solution
+                      <span className="mr-2">Download Solution</span>
                     </>
                   )}
                 </button>
@@ -310,13 +314,12 @@ const ViewAssignment = () => {
                     <p className="text-sm text-gray-500 mb-4">
                       Or click to browse
                     </p>
-                    <input
+                    <Input
                       type="file"
                       accept=".docx"
                       onChange={handleFileSelect}
                       id="file-input"
                       disabled={isSolving}
-                      style={{ display: 'block', margin: '0 auto 1rem auto' }}
                     />
                     {selectedFile && (
                       <div className="mt-4 text-sm text-gray-700">
@@ -324,18 +327,27 @@ const ViewAssignment = () => {
                       </div>
                     )}
                   </div>
+                  <Textarea
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    placeholder="Enter specific instructions for solving the assignment (optional)"
+                    className="my-2"
+
+                  />
+
                   <button
                     onClick={handleSolve}
                     disabled={!selectedFile || isSolving}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
                   >
                     {isSolving ? (
-                      <>
-                        <span className="animate-spin mr-2">⏳</span>Solving...
-                      </>
+                        <>
+                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                        Solving...
+                        </>
                     ) : (
                       <>
-                        <span className="mr-2">🤖</span>Solve with AI
+                        <span className="mr-2">Solve with AI</span>
                       </>
                     )}
                   </button>
