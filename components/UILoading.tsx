@@ -1,8 +1,10 @@
-import { RefreshCw } from "lucide-react"
+import { HashLoader } from "react-spinners"
 
 const UILoading = () => {
     return (
-        <p className="text-center h-full py-4 flex justify-center gap-4 items-center">Loading... <RefreshCw className="animate-spin size-5" /> </p>
+        <div className="flex items-center justify-center h-full">
+            <HashLoader color="#0058b4" />
+        </div>
     )
 }
 

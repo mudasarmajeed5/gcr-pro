@@ -3,8 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { Star, Zap, Brain } from "lucide-react"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation";
 
 export function HeroSection() {
+
+  const router = useRouter();
   return (
     <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden pt-32">
       {/* Animated background */}
@@ -66,18 +69,23 @@ export function HeroSection() {
           >
             <Button
               size="lg"
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 glow-animation px-8 py-6 text-lg font-semibold text-white"
+
+              onClick={() => router.push("/sign-in")}
+              className="bg-gradient-to-r cursor-pointer from-primary to-secondary hover:opacity-90 transition-all duration-300 glow-animation px-8 py-6 text-lg font-semibold text-white"
             >
               <Zap className="w-5 h-5 mr-2" />
               Solve My Assignments
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="px-8 py-6 text-lg font-semibold hover:bg-primary/5 transition-all duration-300 bg-transparent border-primary text-primary hover:text-primary"
-            >
-              <Star className="size-5 mr-2" /> Star on GitHub
-            </Button>
+            <a href="https://github.com/mudasarmajeed5/gcr-pro" target="_blank">
+              <Button
+
+                variant="outline"
+                size="lg"
+                className="px-8 py-6 text-lg font-semibold hover:bg-primary/5 transition-all duration-300 bg-transparent border-primary text-primary hover:text-primary"
+              >
+                <Star className="size-5 mr-2" /> Star on GitHub
+              </Button>
+            </a>
           </motion.div>
 
           {/* Hero visual placeholder */}

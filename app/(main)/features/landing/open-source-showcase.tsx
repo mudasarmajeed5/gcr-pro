@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Github, Star, GitFork, Users, Code } from "lucide-react"
 import { motion } from "framer-motion"
+import useGetRepository from "./hooks/get-repository"
 
 export function OpenSourceShowcase() {
+  const { data: repoData, loading: repoLoading } = useGetRepository()
   return (
     <section id="github" className="py-20">
       <div className="container mx-auto px-4">
@@ -48,34 +50,36 @@ export function OpenSourceShowcase() {
                 </div>
               </CardHeader>
               <CardContent>
+                {repoLoading && <div>Loading</div>}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Star className="w-4 h-4 text-yellow-500" />
-                      <span className="font-bold text-lg">3</span>
+                      <span className="font-bold text-lg">{repoData?.stars ? repoData.stars : "Unavailable"}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">Stars</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <GitFork className="w-4 h-4 text-blue-500" />
-                      <span className="font-bold text-lg">1</span>
+                      <span className="font-bold text-lg">{repoData?.forks ? repoData.forks : "Unavailable"}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">Forks</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Users className="w-4 h-4 text-green-500" />
-                      <span className="font-bold text-lg">1</span>
+                      <span className="font-bold text-lg">{repoData?.contributors ? repoData.contributors : "Unavailable"}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">Contributors</p>
                   </div>
                 </div>
-
-                <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-                  <Github className="w-4 h-4 mr-2" />
-                  View on GitHub
-                </Button>
+                <a href="https://github.com/mudasarmajeed5/gcr-pro">
+                  <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
+                    <Github className="w-4 h-4 mr-2" />
+                    View on GitHub
+                  </Button>
+                </a>
               </CardContent>
             </Card>
           </motion.div>
@@ -109,10 +113,13 @@ export function OpenSourceShowcase() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t">
-                  <Button variant="outline" className="w-full bg-transparent">
-                    <Code className="w-4 h-4 mr-2" />
-                    Explore Full Codebase
-                  </Button>
+
+                  <a href="https://github.com/mudasarmajeed5/gcr-pro">
+                    <Button variant="outline" className="w-full bg-transparent hover:text-accent">
+                      <Code className="w-4 h-4 mr-2" />
+                      Explore Full Codebase
+                    </Button>
+                  </a>
                 </div>
               </CardContent>
             </Card>
@@ -125,12 +132,16 @@ export function OpenSourceShowcase() {
               className="mt-6 text-center"
             >
               <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Contribute to the Future of Education
+                Any bugs? Create an Issue
               </h3>
-              <Button size="lg" variant="outline" className="hover:bg-primary/5 bg-transparent">
-                <Github className="w-5 h-5 mr-2" />
-                Start Contributing
-              </Button>
+
+              <a href="https://github.com/mudasarmajeed5/gcr-pro/issues/new" target="_blank" rel="noopener noreferrer">
+                <Button size="lg" variant="outline" className="hover:bg-primary/5 bg-transparent hover:text-accent">
+                  <Github className="w-5 h-5 mr-2" />
+                  Create Issue
+                </Button>
+              </a>
+
             </motion.div>
           </motion.div>
         </div>

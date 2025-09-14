@@ -18,6 +18,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { useSession } from "next-auth/react"
+import UILoading from "@/components/UILoading"
 
 function AppSidebar() {
   return (
@@ -32,17 +33,12 @@ function AppSidebar() {
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { data: session, status } = useSession();
-  
+
   // Show loading state while checking session
   if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <UILoading />
   }
-  
-  // Return children without layout wrapper for unauthenticated users
+
   if (!session) {
     return <>{children}</>
   }

@@ -1,19 +1,31 @@
 "use client"
 
-import { signIn } from "next-auth/react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { signIn, useSession } from "next-auth/react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { FcGoogle } from "react-icons/fc"
-import { ShieldCheck, LogIn, RefreshCw } from "lucide-react"
+import { ShieldCheck, LogIn, RefreshCw, LayoutDashboard, Home } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function SignIn() {
     const [loading, setLoading] = useState(false);
+    const { data: session } = useSession();
+    const router = useRouter();
+
     const handleLogin = async () => {
         setLoading(true);
         await signIn("google", {
             redirectTo: "/"
         }).finally(() => setLoading(false));
-    }
+    };
+
+    const handleRedirect = () => {
+        if (session) {
+            router.push("/dashboard");
+        } else {
+            router.push("/");
+        }
+    };
 
     return (
         <div className="flex min-h-screen items-center justify-center px-4">
@@ -37,11 +49,16 @@ export default function SignIn() {
                         className="w-full flex items-center justify-center gap-3 py-3 text-lg font-semibold rounded-lg border border-gray-300 hover:border-primary hover:shadow-lg transition-all active:scale-95"
                     >
                         <FcGoogle className="w-6 h-6" aria-hidden />
-                        {loading ? <span className="flex items-center gap-2">
-                            Signing In.. 
-                            <RefreshCw className="animate-spin size-5"/>
-                        </span> : "Sign in with Google"}
+                        {loading ? (
+                            <span className="flex items-center gap-2">
+                                Signing In..
+                                <RefreshCw className="animate-spin size-5" />
+                            </span>
+                        ) : (
+                            "Sign in with Google"
+                        )}
                     </button>
+
 
 
                     {/* Divider */}
@@ -65,6 +82,25 @@ export default function SignIn() {
                         </span>
                     </p>
                 </CardContent>
+                {/* Small Secondary Button */}
+                <CardFooter className="flex justify-center">
+                    <button
+                        onClick={handleRedirect}
+                        className="inline-flex w-full justify-center border items-center gap-2 px-4 hover:border-primary py-2 text-sm font-medium text-muted-foreground rounded-md hover:text-foreground transition-colors"
+                    >
+                        {session ? (
+                            <>
+                                <LayoutDashboard className="w-4 h-4" />
+                                Go to Dashboard
+                            </>
+                        ) : (
+                            <>
+                                <Home className="w-4 h-4" />
+                                Go to Homepage
+                            </>
+                        )}
+                    </button>
+                </CardFooter>
             </Card>
         </div>
     )

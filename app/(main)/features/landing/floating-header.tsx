@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { GraduationCap } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function FloatingHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [activeSection, setActiveSection] = useState(0)
-
+  const router = useRouter();
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
@@ -65,11 +66,10 @@ export function FloatingHeader() {
             {sectionColors.map((color, index) => (
               <div
                 key={index}
-                className={`w-3 h-6 rounded-full transition-all duration-300 border ${
-                  activeSection === index
+                className={`w-3 h-6 rounded-full transition-all duration-300 border ${activeSection === index
                     ? `bg-gradient-to-b ${color} shadow-lg border-white/20`
                     : "bg-muted/50 border-muted/30 hover:bg-muted/70"
-                }`}
+                  }`}
                 style={{
                   boxShadow:
                     activeSection === index
@@ -86,15 +86,14 @@ export function FloatingHeader() {
       </div>
 
       <header
-        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${
-          isScrolled ? "glass rounded-full px-6 py-3" : "bg-transparent px-6 py-4"
-        }`}
+        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${isScrolled ? "glass rounded-full px-6 py-3" : "bg-transparent px-6 py-4"
+          }`}
       >
         <nav className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center glow-animation">
               <span className="text-white font-bold text-sm">
-                <GraduationCap/>
+                <GraduationCap />
               </span>
             </div>
             <span className="font-bold text-xl text-primary">GCR PRO</span>
@@ -116,7 +115,8 @@ export function FloatingHeader() {
             <ModeToggle />
             <Button
               size="sm"
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-white font-medium"
+              onClick={() => router.push("/sign-in")}
+              className="bg-gradient-to-r cursor-pointer from-primary to-secondary hover:opacity-90 transition-opacity text-white font-medium"
             >
               Get Started
             </Button>
