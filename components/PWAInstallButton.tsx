@@ -48,7 +48,7 @@ export function PWAInstallButton() {
     }
 
     deferredPrompt.prompt()
-    const choiceResult = await deferredPrompt.userChoice
+    await deferredPrompt.userChoice
     
     setDeferredPrompt(null)
     setShowInstall(false)

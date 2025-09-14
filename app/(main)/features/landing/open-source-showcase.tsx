@@ -99,7 +99,7 @@ export function OpenSourceShowcase() {
               </CardHeader>
               <CardContent>
                 <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm">
-                  <div className="text-green-600 mb-2">// AI Assignment Solver Core</div>
+                  <div className="text-green-600 mb-2">AI Assignment Solver Core</div>
                   <div className="text-blue-600">async function solveAssignment(</div>
                   <div className="ml-4 text-gray-600">assignment: AssignmentData</div>
                   <div className="text-blue-600">) {`{`}</div>
