@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
 import { usePreviewStore } from "@/store/preview-store";
