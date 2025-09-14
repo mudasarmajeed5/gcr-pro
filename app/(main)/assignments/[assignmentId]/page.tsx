@@ -8,12 +8,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Material } from "@/types/all-data";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
+import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon, DownloadIcon } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 const ViewAssignment = () => {
-  const [instructions,setInstructions] = useState('')
+  const [instructions, setInstructions] = useState('');
+
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
   const { openPreview } = usePreviewStore();
@@ -25,6 +27,19 @@ const ViewAssignment = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const handleMaterialDownload = (material: Material) => {
+    let authId = 0;
+    const fileId = material.driveFile?.driveFile?.id;
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 5000); // 5 seconds
+
+  };
 
   // Fetch assignment and metadata
   const fetchAssignment = useCallback(async () => {
@@ -342,10 +357,10 @@ const ViewAssignment = () => {
                     className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
                   >
                     {isSolving ? (
-                        <>
+                      <>
                         <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
                         Solving...
-                        </>
+                      </>
                     ) : (
                       <>
                         <span className="mr-2">Solve with AI</span>
@@ -402,6 +417,10 @@ const ViewAssignment = () => {
                               Google Drive file
                             </p>
                           </div>
+                          <Button onClick={() => handleMaterialDownload(material)} variant="outline" size="sm" disabled={isDownloading}>
+                            <DownloadIcon className="w-4 h-4" />
+                            <span className="hidden md:inline">Download</span>
+                          </Button>
                         </div>
                       )}
 

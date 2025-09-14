@@ -9,7 +9,7 @@ import { FinalCTA } from "./final-cta"
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background landing-theme">
       <FloatingHeader />
       <HeroSection />
       <ProblemSolutionSection />
