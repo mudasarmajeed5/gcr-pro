@@ -23,6 +23,11 @@ export const sidebarItems = [
         label: 'Assignments'
     },
     {
+        href: '/solver',
+        icon: BookOpenIcon,
+        label: 'Assignment Solver'
+    },
+    {
         href: '/send-email',
         icon: MailIcon,
         label: 'Send Email'

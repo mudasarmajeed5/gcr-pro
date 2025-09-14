@@ -1,4 +1,5 @@
 "use client";
+import React, { useState, useCallback, useEffect } from "react";
 import { usePreviewStore } from "@/store/preview-store";
 import { useParams } from "next/navigation";
 import { useClassroomStore } from "@/store/classroom-store";
@@ -9,11 +10,124 @@ import { Separator } from "@/components/ui/separator";
 import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon } from "lucide-react";
 import Link from "next/link";
 const ViewAssignment = () => {
+
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
   const { openPreview } = usePreviewStore();
-  const assignment = getAssignmentById(assignmentId as string);
+  const [assignment, setAssignment] = useState<any>(null);
+  const [metadata, setMetadata] = useState<any>(null);
   const course = assignment ? getCourseById(assignment.courseId) : null;
+  const [isSolving, setIsSolving] = useState(false);
+  const [solveError, setSolveError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Fetch assignment and metadata
+  const fetchAssignment = useCallback(async () => {
+    const local = getAssignmentById(assignmentId as string);
+    setAssignment(local);
+    // Fetch metadata from backend
+    try {
+      const res = await fetch(`/api/assignments/${assignmentId}/check`);
+      if (res.ok) {
+        setMetadata(await res.json());
+      }
+    } catch { }
+  }, [assignmentId, getAssignmentById]);
+
+  useEffect(() => {
+    fetchAssignment();
+  }, [fetchAssignment]);
+
+  // Solve assignment handler
+  // Drag-and-drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.name.endsWith('.docx')) {
+      setSelectedFile(file);
+    } else {
+      alert('Please upload a .docx file');
+    }
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log(file)
+    if (file && file.name.endsWith('.docx')) {
+      setSelectedFile(file);
+    } else {
+      alert('Please select a .docx file');
+    }
+  };
+
+  const handleSolve = async () => {
+    if (!selectedFile) return;
+    setIsSolving(true);
+    setSolveError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('fileId', assignmentId as string);
+      const response = await fetch('/api/assignments/solve', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Solving failed' }));
+        throw new Error(errorData.error || 'Solving failed');
+      }
+      // Optionally refetch assignment or show success
+      fetchAssignment();
+      setSelectedFile(null);
+    } catch (err: any) {
+      setSolveError(err.message || 'Failed to solve assignment');
+    } finally {
+      setIsSolving(false);
+    }
+  };
+
+
+  // Download solved assignment handler
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`/api/assignments/${assignmentId}/download`, {
+        method: 'GET',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = assignment?.originalName ? `solved_${assignment.originalName}` : 'solved_assignment.docx';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    } catch (err) {
+      alert('Download failed. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (!assignment) {
     return (
@@ -161,6 +275,81 @@ const ViewAssignment = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Assignment Solver Section with conditional rendering */}
+            <div className="mb-6">
+              {metadata?.status === 'solved' && metadata?.hasSolvedFile ? (
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isDownloading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white ml-2`}
+                >
+                  {isDownloading ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-2">⬇️</span>Download Solution
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div>
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-4 ${isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-gray-400'}`}
+                  >
+                    <FileText className="mx-auto h-12 w-12 text-purple-400 mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">
+                      Drag & drop your .docx material here
+                    </p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Or click to browse
+                    </p>
+                    <input
+                      type="file"
+                      accept=".docx"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="file-input"
+                      disabled={isSolving}
+                    />
+                    <label
+                      htmlFor="file-input"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors"
+                    >
+                      Choose File
+                    </label>
+                    {selectedFile && (
+                      <div className="mt-4 text-sm text-gray-700">
+                        Selected: {selectedFile.name}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleSolve}
+                    disabled={!selectedFile || isSolving}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
+                  >
+                    {isSolving ? (
+                      <>
+                        <span className="animate-spin mr-2">⏳</span>Solving...
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-2">🤖</span>Solve with AI
+                      </>
+                    )}
+                  </button>
+                  {solveError && (
+                    <div className="mt-2 text-red-600 text-sm">{solveError}</div>
+                  )}
+                </div>
+              )}
             </div>
 
             <Separator className="my-4 sm:my-6" />

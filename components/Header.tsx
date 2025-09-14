@@ -38,10 +38,10 @@ export default function Header() {
           href="/"
           className="flex relative items-center gap-2 text-2xl font-bold tracking-tight"
         >
-          <GraduationCap className="sm:size-6 size-9 text-primary" />
+          <GraduationCap className="sm:size-6 size-9 text-foreground" />
           <span>
             GCR{" "}
-            <span className="relative text-secondary-foreground/70">Pro</span>
+            <span className="relative text-foreground/70">Pro</span>
             <span className="text-[9px] sm:text-[10px] font-medium absolute -right-7 bottom-0">
               v1.0.0
             </span>

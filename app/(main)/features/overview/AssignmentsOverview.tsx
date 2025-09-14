@@ -123,7 +123,7 @@ export default function AssignmentsOverview() {
           disabled={isLoading}
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-foreground ${isLoading ? 'animate-spin' : ''}`} />
           <span className="hidden xl:inline-block">
             Refresh
           </span>
@@ -162,7 +162,7 @@ export default function AssignmentsOverview() {
                   </span>
                   <Button
                     variant="link"
-                    className="p-0 text-sm cursor-pointer"
+                    className="p-0 text-sm cursor-pointer text-foreground"
                     onClick={() => handleViewDetails('graded')}
                   >
                     View Details
