@@ -79,14 +79,11 @@ export function FloatingHeader() {
               />
             ))}
           </div>
-          <div className="mt-2 text-xs text-center text-muted-foreground font-medium">
-            {activeSection + 1}/{sectionColors.length}
-          </div>
         </div>
       </div>
 
       <header
-        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${isScrolled ? "glass rounded-full px-6 py-3" : "bg-transparent px-6 py-4"
+        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 w-11/12 md:w-auto ${isScrolled ? "glass rounded-full px-6 py-3" : "bg-transparent px-6 py-4"
           }`}
       >
         <nav className="flex items-center gap-8">
