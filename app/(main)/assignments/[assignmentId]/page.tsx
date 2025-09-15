@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { usePreviewStore } from "@/store/preview-store";
 import { useParams } from "next/navigation";
 import { useClassroomStore } from "@/store/classroom-store";
@@ -14,11 +14,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import useAuthUser from "@/hooks/use-auth-user";
+import { HashLoader } from "react-spinners";
+import { Progress } from "@/components/ui/progress";
 const ViewAssignment = () => {
+  const [progress, setProgress] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const apiCompleteRef = useRef(false);
   const [instructions, setInstructions] = useState('');
   const authId = useAuthUser();
   const { assignmentId } = useParams();
   const { getAssignmentById, getCourseById } = useClassroomStore();
+  const [isSolvedLoading, setIsSolvedLoading] = useState(false);
   const { openPreview } = usePreviewStore();
   const [assignment, setAssignment] = useState<any>(null);
   const [metadata, setMetadata] = useState<any>(null);
@@ -28,6 +34,7 @@ const ViewAssignment = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  console.log(authId)
   const handleMaterialDownload = (material: Material) => {
     const fileId = material.driveFile?.driveFile?.id;
     const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
@@ -40,9 +47,23 @@ const ViewAssignment = () => {
     }, 5000); // 5 seconds
 
   };
+  const startProgress = () => {
+    setProgress(0);
+    const duration = 10000;
+    const intervalTime = 100;
+    const increment = (99 / duration) * intervalTime;
 
+    progressIntervalRef.current = setInterval(() => {
+      setProgress(prev => {
+        if (apiCompleteRef.current) return 100;
+        const newProgress = prev + increment;
+        return newProgress >= 99 ? 99 : newProgress;
+      });
+    }, intervalTime);
+  };
   // Fetch assignment and metadata
   const fetchAssignment = useCallback(async () => {
+    setIsSolvedLoading(true);
     const local = getAssignmentById(assignmentId as string);
     setAssignment(local);
     // Fetch metadata from backend
@@ -51,7 +72,12 @@ const ViewAssignment = () => {
       if (res.ok) {
         setMetadata(await res.json());
       }
-    } catch { }
+    } catch (err) {
+      console.error("Failed to fetch assignment metadata", err);
+    }
+    finally {
+      setIsSolvedLoading(false);
+    }
   }, [assignmentId, getAssignmentById]);
 
   useEffect(() => {
@@ -95,15 +121,18 @@ const ViewAssignment = () => {
     if (!selectedFile) return;
     setIsSolving(true);
     setSolveError(null);
+    startProgress();
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('fileId', assignmentId as string);
-      formData.append("instructions", instructions)
+      formData.append("instructions", instructions);
       const response = await fetch('/api/assignments/solve', {
         method: 'POST',
         body: formData,
       });
+      apiCompleteRef.current = true;
+      setProgress(100);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Solving failed' }));
         throw new Error(errorData.error || 'Solving failed');
@@ -113,8 +142,12 @@ const ViewAssignment = () => {
       setSelectedFile(null);
     } catch (err: any) {
       setSolveError(err.message || 'Failed to solve assignment');
+      setProgress(0);
     } finally {
       setIsSolving(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
     }
   };
 
@@ -298,7 +331,11 @@ const ViewAssignment = () => {
 
             {/* Assignment Solver Section with conditional rendering */}
             <div className="mb-6">
-              {metadata?.status === 'solved' && metadata?.hasSolvedFile ? (
+              {isSolvedLoading ? (
+                <div className="flex justify-center items-center min-h-[180px]">
+                  <HashLoader color="#a855f7" size={48} />
+                </div>
+              ) : metadata?.status === 'solved' && metadata?.hasSolvedFile ? (
                 <button
                   onClick={handleDownload}
                   disabled={isDownloading}
@@ -348,25 +385,23 @@ const ViewAssignment = () => {
                     onChange={(e) => setInstructions(e.target.value)}
                     placeholder="Enter specific instructions for solving the assignment (optional)"
                     className="my-2"
-
                   />
+                  <div>
+                    <button
+                      onClick={handleSolve}
+                      disabled={!selectedFile || isSolving}
+                      className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
+                    >
+                      {isSolving ? 'Processing...' : 'Solve with AI'}
+                    </button>
 
-                  <button
-                    onClick={handleSolve}
-                    disabled={!selectedFile || isSolving}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isSolving || !selectedFile ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
-                  >
-                    {isSolving ? (
-                      <>
-                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                        Solving...
-                      </>
-                    ) : (
-                      <>
-                        <span className="mr-2">Solve with AI</span>
-                      </>
+                    {isSolving && (
+                      <div className="mt-3 w-full">
+                        <Progress value={progress} className="h-3 [&>div]:bg-purple-600" />
+                        <div className="text-xs text-gray-500 mt-1 text-center">{Math.round(progress)}%</div>
+                      </div>
                     )}
-                  </button>
+                  </div>
                   {solveError && (
                     <div className="mt-2 text-red-600 text-sm">{solveError}</div>
                   )}

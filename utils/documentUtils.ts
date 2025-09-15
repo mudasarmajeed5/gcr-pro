@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, PageBreak, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, PageBreak, Table, TableRow, TableCell, WidthType, BorderStyle, Header, Footer } from 'docx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import fs from 'fs';
@@ -28,6 +28,7 @@ export async function createSolvedDocument(
 ): Promise<Buffer> {
   // Parse markdown content
   const parsedMarkdown = await parseMarkdownToDocxElements(solvedContent);
+  
   // Load logo image
   let logoImage: ImageRun | null = null;
   try {
@@ -37,110 +38,191 @@ export async function createSolvedDocument(
     logoImage = new ImageRun({
       data: Buffer.from(logoBuffer),
       transformation: {
-        width: 300,
-        height: 300,
+        width: 250,
+        height: 250,
       },
     } as any);
   } catch (error) {
     console.warn('Logo not found, proceeding without logo:', error);
   }
 
+  // Create header
+  const headerParagraph = new Paragraph({
+    children: [
+      new TextRun({
+        text: `${originalTitle.split(".")[0]} - ${sessionData.name}`,
+        size: 16,
+        color: "666666",
+      }),
+    ],
+    alignment: AlignmentType.RIGHT,
+  });
+
+  // Create footer
+  const footerParagraph = new Paragraph({
+    children: [
+      new TextRun({
+        text: `${new Date().toLocaleDateString()} | Roll: ${sessionData.roll_number}`,
+        size: 16,
+        color: "666666",
+      }),
+    ],
+    alignment: AlignmentType.RIGHT,
+  });
+
   const doc = new Document({
     sections: [{
       properties: {
         page: {
           margin: {
-            top: 1440,    // 1 inch
-            bottom: 1440,
-            left: 1440,
+            top: 1800,    // 1.25 inch for header space
+            bottom: 1800,
+            left: 1440,   // 1 inch
             right: 1440,
           },
         },
       },
+      headers: {
+        default: new Header({
+          children: [headerParagraph],
+        }),
+      },
+      footers: {
+        default: new Footer({
+          children: [footerParagraph],
+        }),
+      },
       children: [
-        // Title Page
+        // Enhanced Title Page
         ...(logoImage ? [
           new Paragraph({
             children: [logoImage],
             alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
+            spacing: { after: 600 },
           })
         ] : []),
 
+        // Main title with better styling
         new Paragraph({
           children: [
             new TextRun({
               text: `${originalTitle.split(".")[0]}`,
               bold: true,
-              size: 32,
-              color: "2F5496",
+              size: 40,
+              color: "1F4E79",
             }),
           ],
           heading: HeadingLevel.TITLE,
           alignment: AlignmentType.CENTER,
           spacing: { after: 400 },
+          border: {
+            bottom: {
+              color: "1F4E79",
+              space: 8,
+              style: BorderStyle.SINGLE,
+              size: 2,
+            },
+          },
         }),
 
+        // Subtitle
         new Paragraph({
           children: [
             new TextRun({
-              text: `Name: ${sessionData.name}`,
+              text: "Assignment Solution",
               size: 24,
-            }),
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 100 },
-        }),
-
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Roll Number: ${sessionData.roll_number}`,
-              size: 24,
-            }),
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 },
-        }),
-
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Generated on: ${new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}`,
+              color: "4472C4",
               italics: true,
-              size: 18,
-              color: "666666",
             }),
           ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 600 },
         }),
 
+        // Student info in a styled box
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `👤 Student: ${sessionData.name}`,
+              size: 24,
+              bold: true,
+            }),
+          ],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 200 },
+          indent: { left: 720 },
+          shading: {
+            type: "solid",
+            color: "F8F9FA",
+          },
+          border: {
+            left: {
+              color: "4472C4",
+              space: 4,
+              style: BorderStyle.SINGLE,
+              size: 6,
+            },
+          },
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `🎓 Roll Number: ${sessionData.roll_number}`,
+              size: 24,
+              bold: true,
+            }),
+          ],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 200 },
+          indent: { left: 720 },
+          shading: {
+            type: "solid",
+            color: "F8F9FA",
+          },
+          border: {
+            left: {
+              color: "4472C4",
+              space: 4,
+              style: BorderStyle.SINGLE,
+              size: 6,
+            },
+          },
+        }),
         // Page break
         new Paragraph({
           children: [new PageBreak()],
         }),
 
-        // Solution header
+        // Solution header with enhanced styling
         new Paragraph({
           children: [
             new TextRun({
-              text: "Solution",
+              text: "📝 Solution",
               bold: true,
-              size: 28,
-              color: "2F5496",
+              size: 32,
+              color: "1F4E79",
             }),
           ],
           heading: HeadingLevel.HEADING_1,
-          spacing: { after: 300 },
+          spacing: { after: 400 },
+          shading: {
+            type: "solid",
+            color: "E8F1FF",
+          },
+          border: {
+            bottom: {
+              color: "1F4E79",
+              space: 4,
+              style: BorderStyle.SINGLE,
+              size: 2,
+            },
+          },
         }),
 
-        // Add parsed markdown content
         ...parsedMarkdown,
+
+        
       ],
     }],
   });
@@ -215,19 +297,39 @@ function createHeading(node: MarkdownNode): Paragraph {
   ];
 
   const level = headingLevels[(node.depth || 1) - 1] || HeadingLevel.HEADING_6;
-  const fontSize = Math.max(32 - (node.depth || 1) * 2, 20);
+  const fontSize = Math.max(36 - (node.depth || 1) * 3, 20);
+  
+  // Different colors for different heading levels
+  const colors = ["1F4E79", "4472C4", "5B9BD5", "70AD47", "FFC000", "C55A11"];
+  const color = colors[Math.min((node.depth || 1) - 1, colors.length - 1)];
+
+  // Add emoji prefixes for different heading levels (common in AI-generated content)
+  const emojiPrefixes = ["🔍", "📊", "💡", "⚙️", "📌", "🔸"];
+  const emoji = emojiPrefixes[Math.min((node.depth || 1) - 1, emojiPrefixes.length - 1)];
 
   return new Paragraph({
     children: [
       new TextRun({
-        text: normalizeText(extractTextFromNode(node)),
+        text: `${emoji} ${normalizeText(extractTextFromNode(node))}`,
         bold: true,
         size: fontSize,
-        color: "2F5496",
+        color: color,
       }),
     ],
     heading: level,
-    spacing: { before: 300, after: 200 },
+    spacing: { before: 400, after: 300 },
+    shading: (node.depth || 1) <= 2 ? {
+      type: "solid",
+      color: "F8F9FA",
+    } : undefined,
+    border: (node.depth || 1) <= 2 ? {
+      bottom: {
+        color: color,
+        space: 2,
+        style: BorderStyle.SINGLE,
+        size: 1,
+      },
+    } : undefined,
   });
 }
 
@@ -244,8 +346,9 @@ function createParagraph(node: MarkdownNode): Paragraph {
 
   return new Paragraph({
     children: textRuns.length > 0 ? textRuns : [new TextRun({ text: "", size: 22 })],
-    spacing: { after: 200 },
+    spacing: { after: 240 },
     alignment: AlignmentType.JUSTIFIED,
+    indent: { firstLine: 360 }, // First line indent for paragraphs
   });
 }
 
@@ -263,25 +366,33 @@ function createTextRuns(node: MarkdownNode): TextRun[] {
       runs.push(new TextRun({
         text: normalizeText(extractTextFromNode(node)),
         bold: true,
-        size: 22
+        size: 22,
+        color: "1F4E79"
       }));
       break;
     case 'emphasis':
       runs.push(new TextRun({
         text: normalizeText(extractTextFromNode(node)),
         italics: true,
-        size: 22
+        size: 22,
+        color: "4472C4"
       }));
       break;
     case 'inlineCode':
       runs.push(new TextRun({
-        text: node.value || '',
+        text: ` ${node.value || ''} `,
         size: 20,
-        font: "Courier New",
-        color: "D73A49",
+        font: "Consolas",
+        color: "E74C3C",
         shading: {
           type: "solid",
-          color: "F6F8FA",
+          color: "FDF2F2",
+        },
+        border: {
+          color: "E74C3C",
+          space: 1,
+          style: BorderStyle.SINGLE,
+          size: 1,
         },
       }));
       break;
@@ -290,7 +401,10 @@ function createTextRuns(node: MarkdownNode): TextRun[] {
         text: normalizeText(extractTextFromNode(node)),
         size: 22,
         color: "0366D6",
-        underline: {},
+        underline: {
+          color: "0366D6",
+          type: "single",
+        },
       }));
       break;
     case 'delete':
@@ -298,7 +412,7 @@ function createTextRuns(node: MarkdownNode): TextRun[] {
         text: normalizeText(extractTextFromNode(node)),
         size: 22,
         strike: true,
-        color: "666666",
+        color: "999999",
       }));
       break;
     case 'break':
@@ -335,13 +449,16 @@ function createList(node: MarkdownNode): Paragraph[] {
 
 function createListItem(node: MarkdownNode, index: number, ordered: boolean, depth: number): Paragraph[] {
   const paragraphs: Paragraph[] = [];
-  const indent = 720 + (depth * 360); // Increase indent for nested lists
+  const indent = 720 + (depth * 360);
+  
+  // Different bullet styles for different depths
+  const bulletStyles = ["🔹", "▪️", "◦", "▫️"];
+  const bulletStyle = bulletStyles[Math.min(depth, bulletStyles.length - 1)];
 
   if (node.children) {
     let textContent = '';
     const nestedLists: MarkdownNode[] = [];
 
-    // Separate text content from nested lists
     for (const child of node.children) {
       if (child.type === 'list') {
         nestedLists.push(child);
@@ -350,18 +467,24 @@ function createListItem(node: MarkdownNode, index: number, ordered: boolean, dep
       }
     }
 
-    // Create main list item
-    const bullet = ordered ? `${index + 1}.` : '•';
+    const bullet = ordered ? `${index + 1}.` : bulletStyle;
     paragraphs.push(new Paragraph({
       children: [
-        new TextRun({ text: `${bullet} `, size: 22, bold: true }),
-        new TextRun({ text: normalizeText(textContent.trim()), size: 22 }),
+        new TextRun({ 
+          text: `${bullet} `, 
+          size: 22, 
+          bold: true,
+          color: "4472C4"
+        }),
+        new TextRun({ 
+          text: normalizeText(textContent.trim()), 
+          size: 22 
+        }),
       ],
-      spacing: { after: 100 },
-      indent: { left: indent },
+      spacing: { after: 120 },
+      indent: { left: indent, hanging: 360 },
     }));
 
-    // Handle nested lists
     for (const nestedList of nestedLists) {
       if (nestedList.children) {
         nestedList.children.forEach((nestedItem, nestedIndex) => {
@@ -371,14 +494,22 @@ function createListItem(node: MarkdownNode, index: number, ordered: boolean, dep
       }
     }
   } else {
-    const bullet = ordered ? `${index + 1}.` : '•';
+    const bullet = ordered ? `${index + 1}.` : bulletStyle;
     paragraphs.push(new Paragraph({
       children: [
-        new TextRun({ text: `${bullet} `, size: 22, bold: true }),
-        new TextRun({ text: normalizeText(extractTextFromNode(node)), size: 22 }),
+        new TextRun({ 
+          text: `${bullet} `, 
+          size: 22, 
+          bold: true,
+          color: "4472C4"
+        }),
+        new TextRun({ 
+          text: normalizeText(extractTextFromNode(node)), 
+          size: 22 
+        }),
       ],
-      spacing: { after: 100 },
-      indent: { left: indent },
+      spacing: { after: 120 },
+      indent: { left: indent, hanging: 360 },
     }));
   }
 
@@ -418,13 +549,22 @@ function createTable(node: MarkdownNode): Table {
               },
               shading: rowIndex === 0 ? {
                 type: "solid",
+                color: "4472C4",
+              } : (rowIndex % 2 === 0 ? {
+                type: "solid",
                 color: "F8F9FA",
-              } : undefined,
+              } : undefined),
               borders: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                top: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
+                bottom: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
+                left: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
+                right: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
+              },
+              margins: {
+                top: 200,
+                bottom: 200,
+                left: 300,
+                right: 300,
               },
             }));
           }
@@ -432,7 +572,7 @@ function createTable(node: MarkdownNode): Table {
 
         rows.push(new TableRow({
           children: cells,
-          height: { value: 600, rule: "atLeast" },
+          height: { value: 700, rule: "atLeast" },
         }));
       }
     });
@@ -445,10 +585,10 @@ function createTable(node: MarkdownNode): Table {
       type: WidthType.PERCENTAGE,
     },
     margins: {
-      top: 200,
-      bottom: 200,
-      left: 200,
-      right: 200,
+      top: 300,
+      bottom: 300,
+      left: 0,
+      right: 0,
     },
   });
 }
@@ -461,32 +601,50 @@ function createCodeBlock(node: MarkdownNode): Paragraph {
     children: [
       ...(language ? [
         new TextRun({
-          text: `${language.toUpperCase()}\n`,
-          size: 16,
-          font: "Courier New",
-          color: "666666",
+          text: `💻 ${language.toUpperCase()}\n`,
+          size: 18,
+          font: "Consolas",
+          color: "FFFFFF",
           bold: true,
         })
       ] : []),
       new TextRun({
         text: codeText,
         size: 20,
-        font: "Courier New",
-        color: "24292E",
+        font: "Consolas",
+        color: "2F3337",
       }),
     ],
-    spacing: { before: 200, after: 200 },
-    indent: { left: 720 },
+    spacing: { before: 300, after: 300 },
+    indent: { left: 360, right: 360 },
     shading: {
       type: "solid",
-      color: "F6F8FA",
+      color: language ? "282C34" : "F8F8F8",
     },
     border: {
       left: {
-        color: "E1E4E8",
-        space: 1,
+        color: "4472C4",
+        space: 4,
         style: BorderStyle.SINGLE,
-        size: 4,
+        size: 8,
+      },
+      top: {
+        color: "DDDDDD",
+        space: 2,
+        style: BorderStyle.SINGLE,
+        size: 2,
+      },
+      right: {
+        color: "DDDDDD",
+        space: 2,
+        style: BorderStyle.SINGLE,
+        size: 2,
+      },
+      bottom: {
+        color: "DDDDDD",
+        space: 2,
+        style: BorderStyle.SINGLE,
+        size: 2,
       },
     },
   });
@@ -496,18 +654,27 @@ function createBlockquote(node: MarkdownNode): Paragraph {
   return new Paragraph({
     children: [
       new TextRun({
+        text: "💬 ",
+        size: 24,
+        color: "4472C4",
+      }),
+      new TextRun({
         text: `"${normalizeText(extractTextFromNode(node))}"`,
         size: 22,
         italics: true,
-        color: "6A737D",
+        color: "555555",
       }),
     ],
-    spacing: { before: 200, after: 200 },
-    indent: { left: 720 },
+    spacing: { before: 300, after: 300 },
+    indent: { left: 720, right: 360 },
+    shading: {
+      type: "solid",
+      color: "F8F9FA",
+    },
     border: {
       left: {
-        color: "DFE2E5",
-        space: 1,
+        color: "4472C4",
+        space: 4,
         style: BorderStyle.SINGLE,
         size: 6,
       },
@@ -519,13 +686,14 @@ function createThematicBreak(): Paragraph {
   return new Paragraph({
     children: [
       new TextRun({
-        text: "_______________________________________________",
-        size: 14,
-        color: "E1E4E8",
+        text: "═══════════════════════════════════════════════════",
+        size: 16,
+        color: "4472C4",
+        bold: true,
       }),
     ],
     alignment: AlignmentType.CENTER,
-    spacing: { before: 300, after: 300 },
+    spacing: { before: 400, after: 400 },
   });
 }
 
@@ -543,17 +711,11 @@ function extractTextFromNode(node: MarkdownNode): string {
   return '';
 }
 
-// Helper function to ensure proper spacing after punctuation
 function normalizeText(text: string): string {
   return text
-    // Add space after sentence-ending punctuation if not already present
     .replace(/([.!?])([A-Za-z])/g, '$1 $2')
-    // Add space after comma if not already present
     .replace(/,([A-Za-z])/g, ', $1')
-    // Add space after colon/semicolon if not already present
     .replace(/([;:])([A-Za-z])/g, '$1 $2')
-    // Clean up multiple spaces
     .replace(/\s+/g, ' ')
-    // Clean up extra whitespace
     .trim();
 }
