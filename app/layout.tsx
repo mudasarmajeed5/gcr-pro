@@ -6,18 +6,37 @@ import { Poppins } from "next/font/google"
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "GCR PRO",
+  title: "GCR PRO, AI Assignment Solver & Quiz Generator",
   description:
-    "GCR PRO is crafted by developer [Your Name], delivering a robust, modern web experience for professionals. Built with Next.js, TypeScript, and best practices for performance, accessibility, and PWA support.",
+    "GCR PRO helps students solve assignments instantly and generate quizzes with AI. Study smarter, save time, and boost productivity with Google Classroom support.",
   icons: {
-    icon: [{ url: "/favicon-196.png", sizes: "196x196", type: "image/png" }],
-    apple: [{ url: "/apple-icon-180.png" }],
+    icon: "/favicon.ico",
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
+  openGraph: {
+    title: "GCR PRO, Smarter Learning with AI",
+    description:
+      "AI-powered assignment solver and quiz generator for students. Works with Google Classroom to make learning easier.",
+    url: "https://gcrpro.app",
+    siteName: "GCR PRO",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "GCR PRO, AI Assignment Solver & Quiz Generator",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GCR PRO, AI Assignment Solver & Quiz Generator",
+    description:
+      "Save time, solve assignments, and generate quizzes with GCR PROs AI tools for students.",
+    images: ["/og-image.png"],
   },
 };
+
 
 
 export const viewport: Viewport = {
