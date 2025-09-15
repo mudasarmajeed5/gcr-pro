@@ -2,23 +2,21 @@
 import { create } from 'zustand'
 
 interface AuthStore {
-  authuser: number | null
-  setAuthuser: (authuser: number | null) => void
+  authuserId: number
+  setAuthuser: (authuser: number) => void
   fetchAuthuser: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
-  authuser: null,
+  authuserId: 0,
 
-  setAuthuser: (authuser) => set({ authuser }),
+  setAuthuser: (authuserId) => set({ authuserId }),
 
   fetchAuthuser: async () => {
     try {
       const res = await fetch('/api/auth/authuser')
-      const data: { authuser: number | null } = await res.json()
-      if (data.authuser !== null) {
-        set({ authuser: data.authuser })
-      }
+      const data: { authUserId: number } = await res.json()
+      set({ authuserId: data.authUserId })
     } catch (error) {
       console.error('Failed to fetch authuser:', error)
     }

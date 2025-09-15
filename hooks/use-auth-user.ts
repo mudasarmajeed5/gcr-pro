@@ -4,14 +4,14 @@ import { useAuthStore } from '@/store/auth-store'
 import { useEffect } from 'react'
 
 export default function useAuthUser() {
-  const authuser = useAuthStore((state) => state.authuser)
+  const authuserId = useAuthStore((state) => state.authuserId)
   const fetchAuthuser = useAuthStore((state) => state.fetchAuthuser)
   
   useEffect(() => {
-    if (!authuser) {
+    if (!authuserId) {
       fetchAuthuser()
     }
-  }, [fetchAuthuser, authuser])
+  }, [fetchAuthuser, authuserId])
   
-  return authuser
+  return authuserId
 }

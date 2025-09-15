@@ -13,6 +13,11 @@ const UserSettingsSchema = new Schema(
            type: Boolean,
            default: true,
        },
+       authUserId: {
+        type: Number, 
+        required: true, 
+        default: 0,
+       },
        smtpPassword: {
            type: String,
            default: "",
