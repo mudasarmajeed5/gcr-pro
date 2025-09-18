@@ -103,23 +103,6 @@ export async function createSolvedDocument(
           spacing: { after: 200 },
         }),
 
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Generated on: ${new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}`,
-              italics: true,
-              size: 18,
-              color: "666666",
-            }),
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 600 },
-        }),
-
         // Page break
         new Paragraph({
           children: [new PageBreak()],
@@ -164,7 +147,7 @@ function convertMarkdownNodesToDocx(nodes: MarkdownNode[]): (Paragraph | Table)[
         elements.push(createHeading(node));
         break;
       case 'paragraph':
-        elements.push(createParagraph(node));
+        elements.push(createParagraph(node)); 
         break;
       case 'list':
         elements.push(...createList(node));
