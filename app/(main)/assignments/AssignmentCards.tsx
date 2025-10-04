@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { Suspense } from 'react'
+import React from 'react'
 import { Calendar, AlertTriangle, BookOpen } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +11,7 @@ import UILoading from '@/components/UILoading'
 
 interface AssignmentCardsProps {
     assignment: any
+    filter: string
 }
 
 const getStatusBadge = (assignment: any, filter: any) => {
@@ -50,10 +51,8 @@ const getStatusBadge = (assignment: any, filter: any) => {
     return null;
 }
 
-const AssignmentCardsContent = ({ assignment }: AssignmentCardsProps) => {
-    const searchParams = useSearchParams();
-    const filter = searchParams.get('filter') || 'graded';
-    
+const AssignmentCardsContent = ({ assignment, filter }: AssignmentCardsProps) => {
+
     return (
         <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
             <CardHeader className="flex-shrink-0">
@@ -144,12 +143,8 @@ const AssignmentCardsContent = ({ assignment }: AssignmentCardsProps) => {
     )
 }
 
-const AssignmentCards = ({ assignment }: AssignmentCardsProps) => {
-    return (
-        <Suspense fallback={<UILoading />}>
-            <AssignmentCardsContent assignment={assignment} />
-        </Suspense>
-    )
+const AssignmentCards = ({ assignment, filter }: AssignmentCardsProps) => {
+    return <AssignmentCardsContent assignment={assignment} filter={filter} />;
 }
 
-export default AssignmentCards
+export default React.memo(AssignmentCards);

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import Link from "next/link"
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import {  CheckCircle, XCircle, AlertTriangle, BookOpen, Clock } from 'lucide-react'
+import { CheckCircle, XCircle, AlertTriangle, BookOpen, Clock } from 'lucide-react'
 import { useAssignmentsLayout } from './layout'
 import { useClassroomStore } from "@/store/classroom-store"
 import AssignmentCards from './AssignmentCards'
@@ -61,12 +61,16 @@ const AssignmentsContent = () => {
 
     // Filter assignments based on URL parameter
     const filteredData = useMemo(() => {
-        if (!assignments.length) return { assignments: [], count: 0 };
+        if (!assignments || assignments.length === 0) return { assignments: [], count: 0 };
+
+        // Build a course lookup map once (O(courses)) so we don't scan courses for every assignment
+        const courseMap = new Map<string, any>();
+        for (const c of courses) courseMap.set(c.id, c);
 
         const filteredAssignments: any[] = [];
 
-        assignments.forEach((assignment) => {
-            const course = getCourseById(assignment.courseId);
+        for (const assignment of assignments) {
+            const course = courseMap.get(assignment.courseId);
             const submission = assignment.submission;
             const isOverdue = assignment.isOverdue;
 
@@ -80,7 +84,6 @@ const AssignmentsContent = () => {
 
             switch (filter) {
                 case "graded":
-                    // Only assignments that have been graded (have assignedGrade)
                     if (submission?.assignedGrade !== undefined && submission?.assignedGrade !== null) {
                         filteredAssignments.push({
                             ...assignmentWithCourse,
@@ -93,7 +96,6 @@ const AssignmentsContent = () => {
                     break;
 
                 case "turnedIn":
-                    // Assignments that are turned in (but may or may not be graded)
                     if (submission?.state === 'TURNED_IN' || submission?.state === 'RETURNED') {
                         filteredAssignments.push({
                             ...assignmentWithCourse,
@@ -107,7 +109,6 @@ const AssignmentsContent = () => {
                     break;
 
                 case "unsubmitted":
-                    // Assignments not yet submitted and not overdue
                     if ((!submission || submission.state !== 'TURNED_IN') && !isOverdue) {
                         filteredAssignments.push({
                             ...assignmentWithCourse,
@@ -119,7 +120,6 @@ const AssignmentsContent = () => {
                     break;
 
                 case "missed":
-                    // Assignments that are overdue and not submitted
                     if ((!submission || submission.state !== 'TURNED_IN') && isOverdue && !submission?.assignedGrade) {
                         filteredAssignments.push({
                             ...assignmentWithCourse,
@@ -130,13 +130,13 @@ const AssignmentsContent = () => {
                     }
                     break;
             }
-        });
+        }
 
         return {
             assignments: filteredAssignments,
             count: filteredAssignments.length
         };
-    }, [assignments, courses, filter, getCourseById]);
+    }, [assignments, courses, filter]);
 
     // Set loading state for layout
     useEffect(() => {
@@ -252,7 +252,7 @@ const AssignmentsContent = () => {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredData.assignments.map((assignment) => (
                         <Link key={assignment.id} href={`/assignments/${assignment.id}`} className="block h-full">
-                            <AssignmentCards assignment={assignment}/>
+                            <AssignmentCards assignment={assignment} filter={filter} />
                         </Link>
                     ))}
                 </div>
