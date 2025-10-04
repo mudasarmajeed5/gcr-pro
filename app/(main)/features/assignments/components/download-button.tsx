@@ -133,14 +133,14 @@ export default function DownloadButton({
     }
 
     if (downloadStatus === 'success') {
-      return `${baseClasses} bg-academic-secondary hover:bg-academic-secondary/90 text-academic-secondary focus:ring-academic-secondary`;
+      return `${baseClasses} bg-secondary hover:bg-secondary/90 text-secondary focus:ring-secondary`;
     }
 
     if (downloadStatus === 'error') {
       return `${baseClasses} bg-destructive hover:bg-destructive/90 text-destructive focus:ring-destructive`;
     }
 
-    return `${baseClasses} bg-academic-secondary hover:bg-academic-secondary/90 text-academic-secondary focus:ring-academic-secondary hover:shadow-md transform hover:-translate-y-0.5`;
+    return `${baseClasses} bg-secondary hover:bg-secondary/90 text-secondary focus:ring-secondary hover:shadow-md transform hover:-translate-y-0.5`;
   };
 
   return (

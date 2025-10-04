@@ -266,7 +266,7 @@ const SearchResults = ({
                             onSelect={() => onSelect(assignment)}
                             className="flex items-center gap-3 p-3"
                         >
-                            <Calendar className="h-4 w-4 text-academic-secondary" />
+                            <Calendar className="h-4 w-4 text-secondary" />
                             <div className="flex flex-col">
                                 <span className="font-medium">{assignment.displayName}</span>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

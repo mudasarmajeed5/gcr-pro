@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { getAllProfessors, Professor } from '../../send-email/actions/get-professor-details';
 import InstructorCard from './components/InstructorCard';
 import RecentAssignmentsCard from './components/RecentAssignments';
@@ -26,7 +26,7 @@ export default function CoursePage() {
     const router = useRouter();
     const params = useParams();
     const [courseInstructor, setCourseInstructor] = useState<Professor>()
-    const [professorLoading,setProfessorLoading] = useState(false);
+    const [professorLoading, setProfessorLoading] = useState(false);
     const courseId = params.courseId as string;
     const getProfessor = async (courseId: string) => {
         setProfessorLoading(true)
@@ -35,7 +35,7 @@ export default function CoursePage() {
         setCourseInstructor(prof);
         setProfessorLoading(false);
     }
- 
+
     const {
         fetchClassroomData,
         isLoading,
@@ -97,7 +97,33 @@ export default function CoursePage() {
                 {isLoading ? (
                     <Skeleton className="h-4 w-1/3" />
                 ) : (
-                    <p className="text-muted-foreground">{course?.section}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                        {course?.section && (
+                            <div className="mt-2 sm:mt-0">
+                                <span
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium shadow-sm ring-1 ring-secondary/25"
+                                    title={`Class: ${course.section}`}
+                                    aria-label={`Class ${course.section}`}
+                                >
+                                    <span className="text-xs sm:text-sm font-semibold opacity-95">Class:</span>
+                                    <span className="leading-none ml-1">{course.section}</span>
+                                </span>
+                            </div>
+                        )}
+                        {course?.room && (
+                            <div className="mt-2 sm:mt-0">
+                                <span
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-md ring-1 ring-primary/30"
+                                    title={`Location: ${course.room}`}
+                                    aria-label={`Location ${course.room}`}
+                                >
+                                    <MapPin className="h-4 w-4" />
+                                    <span className="text-xs sm:text-sm font-semibold opacity-95">Location:</span>
+                                    <span className="leading-none ml-1">{course.room}</span>
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
