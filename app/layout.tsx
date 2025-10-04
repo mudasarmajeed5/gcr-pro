@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { cookies } from 'next/headers'
+import { THEMES, ThemeId } from '@/constants/themes'
 import { Poppins } from "next/font/google"
 import { Toaster } from "sonner";
 
@@ -56,6 +58,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Determine themeId from cookie on the server so we can inline variables into the initial HTML
+  const cookieStore = cookies()
+  const cookieTheme = cookieStore.get('themeId')?.value || 'neutral'
+  const id = (cookieTheme in THEMES ? (cookieTheme as ThemeId) : ('neutral' as ThemeId))
+  const theme = THEMES[id]
+  const lightVars = theme.variables || {}
+  const darkVars = theme.darkVariables || {}
+
+  const inlineScript = `(() => {
+    try {
+      const light = ${JSON.stringify(lightVars)};
+      const dark = ${JSON.stringify(darkVars)};
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const vars = prefersDark ? dark : light;
+      const root = document.documentElement;
+      for (const k in vars) {
+        if (Object.prototype.hasOwnProperty.call(vars, k)) {
+          root.style.setProperty(k, vars[k]);
+        }
+      }
+    } catch (e) { /* no-op */ }
+  })();`
+
   return (
     <html lang="en" suppressHydrationWarning className={poppins.className}>
       <head>
@@ -64,6 +89,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="GCR Pro" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Inline script to apply saved theme variables immediately (prevents flash) */}
+        <script dangerouslySetInnerHTML={{ __html: inlineScript }} />
       </head>
       <body>
         <SessionProvider>

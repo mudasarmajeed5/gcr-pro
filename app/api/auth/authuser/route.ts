@@ -32,7 +32,24 @@ export async function GET() {
     )
   }
 
-  return NextResponse.json({
+  const themeId = updatedUser.themeId ?? 'neutral'
+
+  const res = NextResponse.json({
     authUserId: updatedUser.authUserId ?? null,
+    themeId,
   })
+
+  // set a cookie so the theme is available on subsequent requests (not httpOnly so client can read if needed)
+  try {
+    res.cookies.set('themeId', String(themeId), {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      sameSite: 'lax',
+    })
+  } catch (e) {
+    // ignore if cookie can't be set for some reason
+    console.error('Unable to set themeId cookie', e)
+  }
+
+  return res
 }

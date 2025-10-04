@@ -24,6 +24,15 @@ export function ThemeProvider({
 
   // apply theme when session or dark mode changes
   useEffect(() => {
+    // First try fast path: themeId cookie (set during auth flow) so we can apply immediately
+    const cookieMatch = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )themeId=([^;]+)/) : null
+    const cookieThemeId = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null
+    if (cookieThemeId) {
+      setThemeId(cookieThemeId)
+      applyTheme(cookieThemeId, isDark)
+      return
+    }
+
     // fetch user's saved settings from server API (safe in any runtime)
     let mounted = true
       ; (async () => {

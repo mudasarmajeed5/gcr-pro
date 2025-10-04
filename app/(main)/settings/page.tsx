@@ -70,6 +70,9 @@ const Preferences = () => {
       setSmtpPassword(formData.get("smtpPassword") as string)
       // apply saved theme immediately
       applyTheme(selectedTheme, isDarkMode)
+      try {
+        document.cookie = `themeId=${encodeURIComponent(selectedTheme)}; path=/; max-age=${60 * 60 * 24 * 30}`
+      } catch { }
     } else {
       toast.error(res.message)
     }
