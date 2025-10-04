@@ -3,7 +3,7 @@ import { THEMES, ThemeId } from "@/constants/themes";
 
 export function applyTheme(themeId: ThemeId | string, isDark: boolean) {
     const id = themeId as ThemeId;
-    const theme = (THEMES as any)[id] as typeof THEMES[keyof typeof THEMES] | undefined;
+    const theme = (THEMES as Record<ThemeId, typeof THEMES[ThemeId]>)[id as ThemeId] as typeof THEMES[ThemeId] | undefined;
     if (!theme) return;
 
     const variables = isDark ? theme.darkVariables : theme.variables;
@@ -14,15 +14,16 @@ export function applyTheme(themeId: ThemeId | string, isDark: boolean) {
     Object.entries(variables).forEach(([key, value]) => {
         try {
             root.style.setProperty(key, value as string);
-        } catch (e) {
+        } catch {
             // ignore invalid values
         }
     });
 }
 
-export function getThemeFromUser(userSettings: any): ThemeId {
+export function getThemeFromUser(userSettings: unknown): ThemeId {
     if (!userSettings) return "neutral" as ThemeId;
-    const id = userSettings.themeId as string | undefined;
+    const us = userSettings as { themeId?: string }
+    const id = us.themeId
     if (!id || !(id in THEMES)) return "neutral" as ThemeId;
     return id as ThemeId;
 }

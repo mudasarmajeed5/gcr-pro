@@ -32,12 +32,13 @@ export function ThemeProvider({
           if (!res.ok) return
           const data = await res.json()
           if (!mounted) return
-          const id = data?.message?.themeId ?? (session as any)?.user?.themeId ?? 'neutral'
+          const msg = data?.message as unknown as { themeId?: string }
+          const id = msg?.themeId ?? (session as unknown as { user?: { themeId?: string } })?.user?.themeId ?? 'neutral'
           setThemeId(id)
           applyTheme(id, isDark)
-        } catch (e) {
+        } catch {
           // fallback to session or neutral
-          const id = (session as any)?.user?.themeId ?? 'neutral'
+          const id = (session as unknown as { user?: { themeId?: string } })?.user?.themeId ?? 'neutral'
           setThemeId(id)
           applyTheme(id, isDark)
         }

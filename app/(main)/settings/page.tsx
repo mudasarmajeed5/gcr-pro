@@ -38,9 +38,9 @@ const Preferences = () => {
     if (!smtpPassword) {
       const result = await getSettings()
       if (result.success) {
-        const msg: any = result.message
-        setSmtpPassword(msg.smtpPassword)
-        setShowGradeCard(msg.showGradeCard)
+        const msg = result.message as unknown as { smtpPassword?: string; showGradeCard?: boolean; themeId?: string }
+        setSmtpPassword(msg.smtpPassword || "")
+        setShowGradeCard(!!msg.showGradeCard)
         if (msg.themeId) setSelectedTheme(msg.themeId)
       } else {
         setError(result.message)
