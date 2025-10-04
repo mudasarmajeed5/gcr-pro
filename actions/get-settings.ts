@@ -11,6 +11,7 @@ export interface UserSettingsType {
   createdAt: Date,
   showGradeCard: boolean,
   smtpPassword: string,
+  themeId?: string,
   updatedAt: Date
 }
 

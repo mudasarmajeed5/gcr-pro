@@ -3,6 +3,7 @@ import { auth } from "@/auth" // your auth config
 import UserSettings from "@/models/UserSettings";
 import { connectDB } from "@/lib/connectDB";
 import { encrypt } from "@/lib/crypto-helper";
+import { THEMES } from "@/constants/themes";
 export async function saveSettings(formData: FormData) {
     try {
         await connectDB();
@@ -13,11 +14,18 @@ export async function saveSettings(formData: FormData) {
         const smtp = smtpPassword.replace(/\s+/g, "");
         const encryptedSmtpKey = encrypt(smtp);
         const showGradeCard = formData.get("showGradeCard") === "on"
+        const themeId = (formData.get("themeId") as string) || undefined
+
+        // validate theme
+        if (themeId && !(themeId in THEMES)) {
+            return { success: false, message: "Invalid theme selected" }
+        }
         const updatedSettings = await UserSettings.findOneAndUpdate(
             { userId: userId },
             {
                 smtpPassword: encryptedSmtpKey,
-                showGradeCard
+                showGradeCard,
+                ...(themeId ? { themeId } : {})
             },
             { new: true, upsert: true }
         )

@@ -5,6 +5,14 @@ declare module "next-auth" {
     accessToken?: string;
     error?: string;
     id?: string
+    // optional theme id saved in user settings
+    user?: {
+      id?: string;
+      themeId?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
   }
 }
 export default {
@@ -32,7 +40,7 @@ export default {
     }),
   ],
   callbacks: {
-   
+
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token;
@@ -82,7 +90,15 @@ export default {
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
-      session.user.id = token.sub as string;
+      // attach id and themeId from DB if available
+      const userId = token.sub as string | undefined
+      session.user = session.user || {}
+      if (userId) {
+        session.user.id = userId
+        // NOTE: DB lookup removed here to avoid importing server-only modules in auth callback
+        // Theme will be applied by the client ThemeProvider which can fetch settings server-side.
+      }
+
       return session;
     },
 

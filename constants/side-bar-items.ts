@@ -6,7 +6,7 @@ import {
     SettingsIcon,
     Sparkle
 } from 'lucide-react'
-export const sidebarItems = [
+export const sidebarItems = [   
     {
         href: "/",
         icon: Home,

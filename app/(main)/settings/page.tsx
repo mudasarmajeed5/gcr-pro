@@ -14,6 +14,8 @@ import { getSettings } from '@/actions/get-settings'
 import { userStore } from '@/store/user-store'
 import Link from 'next/link'
 import UILoading from '@/components/UILoading'
+import { THEMES } from '@/constants/themes'
+import applyTheme from '@/lib/utils/theme'
 
 const Preferences = () => {
   const { data: session, status } = useSession()
@@ -26,6 +28,8 @@ const Preferences = () => {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTheme, setSelectedTheme] = useState<string>('neutral')
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
 
   // Fetch settings only if store is empty
   const initializeSettings = async () => {
@@ -34,8 +38,10 @@ const Preferences = () => {
     if (!smtpPassword) {
       const result = await getSettings()
       if (result.success) {
-        setSmtpPassword(result.message.smtpPassword)
-        setShowGradeCard(result.message.showGradeCard)
+        const msg: any = result.message
+        setSmtpPassword(msg.smtpPassword)
+        setShowGradeCard(msg.showGradeCard)
+        if (msg.themeId) setSelectedTheme(msg.themeId)
       } else {
         setError(result.message)
       }
@@ -46,15 +52,24 @@ const Preferences = () => {
 
   useEffect(() => {
     if (status === "authenticated") initializeSettings()
+    // detect system preference for preview
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDarkMode(mq.matches)
+    const listener = (e: MediaQueryListEvent) => setIsDarkMode(e.matches)
+    try { mq.addEventListener('change', listener) } catch { mq.addListener(listener) }
+    return () => { try { mq.removeEventListener('change', listener) } catch { mq.removeListener(listener) } }
   }, [status])
 
   const handleSaveSettings = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    formData.set('themeId', selectedTheme)
     const res = await saveSettings(formData)
     if (res.success) {
       toast.success(res.message)
       setSmtpPassword(formData.get("smtpPassword") as string)
+      // apply saved theme immediately
+      applyTheme(selectedTheme, isDarkMode)
     } else {
       toast.error(res.message)
     }
@@ -86,6 +101,44 @@ const Preferences = () => {
             <Switch id="showGradeCard" name="showGradeCard" checked={showGradeCard} onCheckedChange={setShowGradeCard} />
             <input type="hidden" name="showGradeCard" value={showGradeCard ? "true" : "false"} />
 
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Theme Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>Choose an app theme (light & dark supported). Click to preview and Save to persist.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Object.values(THEMES).map((theme) => (
+              <button
+                key={theme.id}
+                type="button"
+                onClick={() => {
+                  setSelectedTheme(theme.id)
+                  applyTheme(theme.id, isDarkMode)
+                }}
+                className={`relative rounded-lg p-3 text-left border hover:shadow-md focus:outline-none ${selectedTheme === theme.id ? 'ring-2 ring-primary' : 'border-transparent'}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{theme.name}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-6 rounded overflow-hidden flex">
+                      <div className="w-1/3" style={{ background: theme.preview.primary }} />
+                      <div className="w-1/3" style={{ background: theme.preview.secondary }} />
+                      <div className="w-1/3" style={{ background: theme.preview.accent }} />
+                    </div>
+                  </div>
+                </div>
+                {selectedTheme === theme.id && (
+                  <div className="absolute top-2 right-2 text-primary">✓</div>
+                )}
+              </button>
+            ))}
           </div>
         </CardContent>
       </Card>
