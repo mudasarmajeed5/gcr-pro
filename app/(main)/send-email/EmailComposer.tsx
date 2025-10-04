@@ -115,7 +115,7 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
 
 
     if (!selectedProfessor) return (
-        <div className="flex items-center justify-center h-full p-6 mt-30">
+        <div className="flex items-center justify-center h-[70vh] p-6 mt-30">
             <div className="text-center space-y-2">
                 <p className="text-muted-foreground">Select a Professor from right-sidebar to compose an email</p>
             </div>

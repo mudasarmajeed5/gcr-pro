@@ -9,10 +9,10 @@ interface DownloadButtonProps {
   className?: string;
 }
 
-export default function DownloadButton({ 
-  assignmentId, 
+export default function DownloadButton({
+  assignmentId,
   filename,
-  className = '' 
+  className = ''
 }: DownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -20,7 +20,7 @@ export default function DownloadButton({
   const handleDownload = async () => {
     setIsDownloading(true);
     setDownloadStatus('idle');
-    
+
     try {
       const response = await fetch(`/api/assignments/${assignmentId}/download`, {
         method: 'GET',
@@ -28,7 +28,7 @@ export default function DownloadButton({
           'Cache-Control': 'no-cache',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -37,11 +37,11 @@ export default function DownloadButton({
       // Get the blob and content type
       const blob = await response.blob();
       const contentType = response.headers.get('Content-Type') || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      
+
       // Extract filename from headers or use provided/default
       const contentDisposition = response.headers.get('Content-Disposition');
       let downloadFilename = filename || 'solved_assignment.docx';
-      
+
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
         if (filenameMatch && filenameMatch[1]) {
@@ -51,17 +51,17 @@ export default function DownloadButton({
 
       // Create download link
       const url = window.URL.createObjectURL(new Blob([blob], { type: contentType }));
-      
+
       const link = document.createElement('a');
       link.style.display = 'none';
       link.href = url;
       link.download = downloadFilename;
       link.setAttribute('download', downloadFilename);
-      
+
       // Append to body, click, and cleanup
       document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
@@ -75,11 +75,11 @@ export default function DownloadButton({
     } catch (error) {
       console.error('Download error:', error);
       setDownloadStatus('error');
-      
+
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Download failed';
       alert(`Download failed: ${errorMessage}`);
-      
+
       // Reset error state after a delay
       setTimeout(() => setDownloadStatus('idle'), 3000);
     } finally {
@@ -96,7 +96,7 @@ export default function DownloadButton({
         </>
       );
     }
-    
+
     if (downloadStatus === 'success') {
       return (
         <>
@@ -105,7 +105,7 @@ export default function DownloadButton({
         </>
       );
     }
-    
+
     if (downloadStatus === 'error') {
       return (
         <>
@@ -114,7 +114,7 @@ export default function DownloadButton({
         </>
       );
     }
-    
+
     return (
       <>
         <Download className="-ml-1 mr-2 h-4 w-4" />
@@ -127,20 +127,20 @@ export default function DownloadButton({
     const baseClasses = `
       inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
     `;
-    
+
     if (isDownloading) {
-      return `${baseClasses} bg-gray-400 cursor-not-allowed text-white`;
+      return `${baseClasses} bg-muted/40 cursor-not-allowed text-muted-foreground`;
     }
-    
+
     if (downloadStatus === 'success') {
-      return `${baseClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500`;
+      return `${baseClasses} bg-academic-secondary hover:bg-academic-secondary/90 text-academic-secondary focus:ring-academic-secondary`;
     }
-    
+
     if (downloadStatus === 'error') {
-      return `${baseClasses} bg-red-600 hover:bg-red-700 text-white focus:ring-red-500`;
+      return `${baseClasses} bg-destructive hover:bg-destructive/90 text-destructive focus:ring-destructive`;
     }
-    
-    return `${baseClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 hover:shadow-md transform hover:-translate-y-0.5`;
+
+    return `${baseClasses} bg-academic-secondary hover:bg-academic-secondary/90 text-academic-secondary focus:ring-academic-secondary hover:shadow-md transform hover:-translate-y-0.5`;
   };
 
   return (

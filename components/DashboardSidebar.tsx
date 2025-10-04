@@ -44,7 +44,7 @@ export default function DashboardSidebar() {
             </nav>
 
             {/* Bottom Section */}
-            <div className="p-3 border-t flex items-center gap-2 border-gray-200 mt-3">
+            <div className="p-3 border-t flex items-center gap-2 border-border mt-3">
                 {/* Follow Creator Button */}
                 <GraduationCap className='size-9' />
                 {session?.user && (

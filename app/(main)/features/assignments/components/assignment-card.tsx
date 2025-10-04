@@ -27,45 +27,45 @@ export default function AssignmentCard({ assignment, onStatusUpdate }: Assignmen
   const getStatusIcon = () => {
     switch (assignment.status) {
       case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return <Clock className="h-5 w-5 text-accent" />;
       case 'solved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-academic-secondary" />;
       default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
+        return <Clock className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = () => {
     switch (assignment.status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-accent/20 text-accent-foreground';
       case 'solved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-academic-secondary/20 text-academic-secondary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted/20 text-muted-foreground';
     }
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-lg border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
-          <FileText className="h-8 w-8 text-blue-500 mt-1" />
+          <FileText className="h-8 w-8 text-primary mt-1" />
           <div>
-            <h3 className="font-medium text-gray-900 text-lg">
+            <h3 className="font-medium text-foreground text-lg">
               {assignment.originalName}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Uploaded: {formatDate(assignment.createdAt)}
             </p>
             {assignment.status === 'solved' && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Solved: {formatDate(assignment.updatedAt)}
               </p>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {getStatusIcon()}
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor()}`}>
@@ -73,7 +73,7 @@ export default function AssignmentCard({ assignment, onStatusUpdate }: Assignmen
           </span>
         </div>
       </div>
-      
+
       <div className="mt-4 flex space-x-2">
         {assignment.status === 'pending' && (
           <SolveButton
@@ -81,7 +81,7 @@ export default function AssignmentCard({ assignment, onStatusUpdate }: Assignmen
             onSolveComplete={() => onStatusUpdate(assignment.id, 'solved')}
           />
         )}
-        
+
         {assignment.status === 'solved' && assignment.hasSolvedFile && (
           <DownloadButton assignmentId={assignment.id} />
         )}

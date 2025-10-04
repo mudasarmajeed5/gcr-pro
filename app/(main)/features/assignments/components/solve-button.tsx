@@ -47,10 +47,10 @@ export default function SolveButton({ assignmentId, onSolveComplete }: SolveButt
     setIsSolving(true);
     setIsComplete(false);
     setProgress(0);
-    
+
     // Start progress bar
     startProgress();
-    
+
     try {
       const response = await fetch('/api/assignments/solve', {
         method: 'POST',
@@ -68,7 +68,7 @@ export default function SolveButton({ assignmentId, onSolveComplete }: SolveButt
       apiCompleteRef.current = true;
       setProgress(100);
       setIsComplete(true);
-      
+
       // Show success state briefly before calling completion
       setTimeout(() => {
         onSolveComplete();
@@ -95,7 +95,7 @@ export default function SolveButton({ assignmentId, onSolveComplete }: SolveButt
   if (isSolving) {
     return (
       <div className="space-y-3">
-        <div className="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md">
+        <div className="inline-flex items-center px-4 py-2 bg-accent text-accent-foreground text-sm font-medium rounded-md">
           {isComplete ? (
             <>
               <CheckCircle className="-ml-1 mr-2 h-4 w-4" />
@@ -110,7 +110,7 @@ export default function SolveButton({ assignmentId, onSolveComplete }: SolveButt
         </div>
         <div className="w-full max-w-xs">
           <Progress value={progress} className="h-2" />
-          <div className="text-xs text-gray-500 mt-1 text-center">
+          <div className="text-xs text-muted-foreground mt-1 text-center">
             {Math.round(progress)}%
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function SolveButton({ assignmentId, onSolveComplete }: SolveButt
   return (
     <button
       onClick={handleSolve}
-      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md bg-accent hover:bg-accent/90 text-accent-foreground transition-colors"
     >
       <Brain className="-ml-1 mr-2 h-4 w-4" />
       Solve Assignment

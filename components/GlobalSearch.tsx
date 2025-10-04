@@ -242,7 +242,7 @@ const SearchResults = ({
                             onSelect={() => onSelect(course)}
                             className="flex items-center gap-3 p-3"
                         >
-                            <BookOpen className="h-4 w-4 text-blue-500" />
+                            <BookOpen className="h-4 w-4 text-primary" />
                             <div className="flex flex-col">
                                 <span className="font-medium">{course.displayName}</span>
                                 {course.description && (
@@ -266,7 +266,7 @@ const SearchResults = ({
                             onSelect={() => onSelect(assignment)}
                             className="flex items-center gap-3 p-3"
                         >
-                            <Calendar className="h-4 w-4 text-green-500" />
+                            <Calendar className="h-4 w-4 text-academic-secondary" />
                             <div className="flex flex-col">
                                 <span className="font-medium">{assignment.displayName}</span>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -296,7 +296,7 @@ const SearchResults = ({
                             onSelect={() => onSelect(material)}
                             className="flex items-center gap-3 p-3"
                         >
-                            <FileText className="h-4 w-4 text-purple-500" />
+                            <FileText className="h-4 w-4 text-accent" />
                             <div className="flex flex-col">
                                 <span className="font-medium">{material.displayName}</span>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
