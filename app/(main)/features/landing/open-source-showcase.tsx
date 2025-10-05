@@ -48,11 +48,7 @@ export function OpenSourceShowcase() {
   return (
     <section id="github" className="py-20">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+        <div
           className="text-center mb-12"
         >
           <Badge variant="outline" className="mb-4 px-4 py-2">
@@ -62,7 +58,7 @@ export function OpenSourceShowcase() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             GCR PRO is completely open source. Join our community and help shape the future of education technology.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* GitHub Stats */}
@@ -161,11 +157,8 @@ export function OpenSourceShowcase() {
           </motion.div>
 
           {/* Code Preview */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
+          <div
+
           >
             <Card className="border-2 border-primary/20">
               <CardHeader>
@@ -217,7 +210,7 @@ export function OpenSourceShowcase() {
                 </Button>
               </a>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

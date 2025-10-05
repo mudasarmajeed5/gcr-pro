@@ -50,7 +50,7 @@ const useGetRepository = () => {
           language,
           bytes,
           percentage: parseFloat(((bytes / totalBytes) * 100).toFixed(1)),
-          lines: Math.round(bytes / 30) // Rough estimate: ~25 characters per line
+          lines: Math.round(bytes / 35) // Rough estimate: ~25 characters per line
         }))
         .sort((a, b) => b.bytes - a.bytes) // Sort by bytes (descending)
 
