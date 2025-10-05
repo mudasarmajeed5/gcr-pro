@@ -21,7 +21,7 @@ export default function SidebarItem({
         className={cn(
           "flex items-center gap-3 px-3 my-1 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
           isActive
-            ? "bg-accent text-foreground"
+            ? "bg-accent/40 text-foreground"
             : "text-muted-foreground hover:bg-muted hover:text-foreground"
         )}
       >

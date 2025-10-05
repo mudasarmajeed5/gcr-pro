@@ -1,39 +1,30 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import applyTheme from '@/lib/utils/theme'
 
-export function ThemeProvider({
-  children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
-  const { data: session } = useSession()
-  const [isDark, setIsDark] = useState(false)
+// A small component inside the provider that reacts to next-themes' resolvedTheme
+// and re-applies CSS variables for the selected color palette (themeId).
+function ThemeApplier() {
+  const { resolvedTheme } = useTheme()
   const [themeId, setThemeId] = useState<string | null>(null)
 
+  // Load themeId fast-path from cookie, fallback to server API
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDark(mq.matches)
-    const listener = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    try { mq.addEventListener('change', listener) } catch { mq.addListener(listener) }
-    return () => { try { mq.removeEventListener('change', listener) } catch { mq.removeListener(listener) } }
-  }, [])
+    // Only run this fetch/apply once if we don't already have a themeId.
+    if (themeId) return
 
-  // apply theme when session or dark mode changes
-  useEffect(() => {
-    // First try fast path: themeId cookie (set during auth flow) so we can apply immediately
     const cookieMatch = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )themeId=([^;]+)/) : null
     const cookieThemeId = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null
     if (cookieThemeId) {
       setThemeId(cookieThemeId)
-      applyTheme(cookieThemeId, isDark)
+      // we rely on the resolvedTheme to decide dark vs light
+      applyTheme(cookieThemeId, resolvedTheme === 'dark')
       return
     }
 
-    // fetch user's saved settings from server API (safe in any runtime)
     let mounted = true
       ; (async () => {
         try {
@@ -42,24 +33,35 @@ export function ThemeProvider({
           const data = await res.json()
           if (!mounted) return
           const msg = data?.message as unknown as { themeId?: string }
-          const id = msg?.themeId ?? (session as unknown as { user?: { themeId?: string } })?.user?.themeId ?? 'neutral'
+          const id = msg?.themeId ?? 'neutral'
           setThemeId(id)
-          applyTheme(id, isDark)
+          applyTheme(id, resolvedTheme === 'dark')
         } catch {
-          // fallback to session or neutral
-          const id = (session as unknown as { user?: { themeId?: string } })?.user?.themeId ?? 'neutral'
-          setThemeId(id)
-          applyTheme(id, isDark)
+          if (!mounted) return
+          setThemeId('neutral')
+          applyTheme('neutral', resolvedTheme === 'dark')
         }
       })()
     return () => { mounted = false }
-  }, [session, isDark])
+  }, [resolvedTheme, themeId])
 
-  // also reapply when themeId changes (e.g., user changed it in settings)
+  // reapply whenever the resolvedTheme (light/dark) or themeId changes
   useEffect(() => {
     if (!themeId) return
-    applyTheme(themeId, isDark)
-  }, [themeId, isDark])
+    applyTheme(themeId, resolvedTheme === 'dark')
+  }, [themeId, resolvedTheme])
 
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return null
+}
+
+export function ThemeProvider({
+  children,
+  ...props
+}: React.ComponentProps<typeof NextThemesProvider>) {
+  return (
+    <NextThemesProvider {...props}>
+      <ThemeApplier />
+      {children}
+    </NextThemesProvider>
+  )
 }

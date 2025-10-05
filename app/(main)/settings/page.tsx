@@ -1,5 +1,6 @@
 "use client"
 import { FormEvent, useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -29,7 +30,18 @@ const Preferences = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTheme, setSelectedTheme] = useState<string>('neutral')
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
+  const { resolvedTheme } = useTheme()
+  // resolvedTheme can be 'light' | 'dark' | undefined
+  const [mounted, setMounted] = useState(false)
+
+  const getIsDark = () => {
+    if (resolvedTheme) return resolvedTheme === 'dark'
+    try {
+      return typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+    } catch {
+      return false
+    }
+  }
 
   // Fetch settings only if store is empty
   const initializeSettings = async () => {
@@ -50,15 +62,26 @@ const Preferences = () => {
     setLoading(false)
   }
 
+  // mark component mounted so we don't rely on unresolved next-themes state during SSR/route transitions
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    // fast-path: read themeId from cookie so the selected card highlights immediately
+    try {
+      const match = document.cookie.match(/(?:^|; )themeId=([^;]+)/)
+      if (match && match[1]) {
+        const cookieTheme = decodeURIComponent(match[1])
+        setSelectedTheme(cookieTheme)
+        // apply preview immediately from cookie so UI matches persisted theme
+        applyTheme(cookieTheme, getIsDark())
+      }
+    } catch { }
+
     if (status === "authenticated") initializeSettings()
-    // detect system preference for preview
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDarkMode(mq.matches)
-    const listener = (e: MediaQueryListEvent) => setIsDarkMode(e.matches)
-    try { mq.addEventListener('change', listener) } catch { mq.addListener(listener) }
-    return () => { try { mq.removeEventListener('change', listener) } catch { mq.removeListener(listener) } }
-  }, [status])
+  }, [status, resolvedTheme, mounted])
 
   const handleSaveSettings = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -69,7 +92,7 @@ const Preferences = () => {
       toast.success(res.message)
       setSmtpPassword(formData.get("smtpPassword") as string)
       // apply saved theme immediately
-      applyTheme(selectedTheme, isDarkMode)
+      applyTheme(selectedTheme, resolvedTheme === 'dark')
       try {
         document.cookie = `themeId=${encodeURIComponent(selectedTheme)}; path=/; max-age=${60 * 60 * 24 * 30}`
       } catch { }
@@ -120,11 +143,13 @@ const Preferences = () => {
               <button
                 key={theme.id}
                 type="button"
+                aria-pressed={selectedTheme === theme.id}
                 onClick={() => {
                   setSelectedTheme(theme.id)
-                  applyTheme(theme.id, isDarkMode)
+                  // use synchronous check when next-themes isn't ready
+                  applyTheme(theme.id, getIsDark())
                 }}
-                className={`relative rounded-lg p-3 text-left border hover:shadow-md focus:outline-none ${selectedTheme === theme.id ? 'ring-2 ring-primary' : 'border-transparent'}`}>
+                className={`relative rounded-lg p-3 text-left border hover:shadow-md focus:outline-none transition-colors duration-150 ease-in-out ${selectedTheme === theme.id ? 'border-2 border-primary bg-accent/5' : 'border-transparent'}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{theme.name}</div>
@@ -138,7 +163,9 @@ const Preferences = () => {
                   </div>
                 </div>
                 {selectedTheme === theme.id && (
-                  <div className="absolute top-2 right-2 text-primary">✓</div>
+                  <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs shadow-sm" aria-hidden>
+                    ✓
+                  </span>
                 )}
               </button>
             ))}

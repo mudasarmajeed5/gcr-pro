@@ -20,7 +20,7 @@ export default function RecentActivity() {
     const { materials, courses } = useClassroomStore();
     const { openPreview } = usePreviewStore();
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-    
+
     const handlePreview = (material: CourseWorkMaterial) => {
         const first = material.materials?.[0];
         if (!first) return;
@@ -35,7 +35,7 @@ export default function RecentActivity() {
             });
         }
     };
-    
+
     // Filter materials by recent date first
     const recentMaterials = materials?.filter((material: CourseWorkMaterial) => {
         if (!material.creationTime) return false;
@@ -49,7 +49,7 @@ export default function RecentActivity() {
     }) || [];
 
     // Further filter by selected course if any
-    const filteredMaterials = selectedCourseId 
+    const filteredMaterials = selectedCourseId
         ? recentMaterials.filter(material => material.courseId === selectedCourseId)
         : recentMaterials;
 
@@ -106,14 +106,14 @@ export default function RecentActivity() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                     onClick={() => setSelectedCourseId(null)}
                                     className={selectedCourseId === null ? "bg-muted" : ""}
                                 >
                                     All Courses
                                 </DropdownMenuItem>
                                 {courses?.map((course) => (
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                         key={course.id}
                                         onClick={() => setSelectedCourseId(course.id)}
                                         className={selectedCourseId === course.id ? "bg-muted" : ""}
@@ -126,12 +126,12 @@ export default function RecentActivity() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="overflow-auto max-h-[600px]">
+                <CardContent className="overflow-auto max-h-[600px] overflow-x-hidden">
                     {filteredMaterials.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
                             <FolderOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
                             <p>
-                                {selectedCourse 
+                                {selectedCourse
                                     ? `No recent materials found for ${selectedCourse.name} (7 days)`
                                     : "No recent materials found (7 days)"
                                 }
@@ -145,7 +145,7 @@ export default function RecentActivity() {
                                 return (
                                     <div
                                         key={material.id}
-                                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer border"
+                                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer border w-full min-w-0"
                                         onClick={() => handlePreview(material)}
                                     >
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -153,7 +153,12 @@ export default function RecentActivity() {
                                                 {getIcon(material)}
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
-                                                <span className="font-medium truncate">{material.title}</span>
+                                                <span
+                                                    className="font-medium break-words"
+                                                 
+                                                >
+                                                    {material.title}
+                                                </span>
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
                                                     {course && (
                                                         <Badge variant="secondary" className="text-xs">

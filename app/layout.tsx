@@ -53,13 +53,13 @@ const poppins = Poppins({
   variable: "--font-poppins",
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   // Determine themeId from cookie on the server so we can inline variables into the initial HTML
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const cookieTheme = cookieStore.get('themeId')?.value || 'neutral'
   const id = (cookieTheme in THEMES ? (cookieTheme as ThemeId) : ('neutral' as ThemeId))
   const theme = THEMES[id]
@@ -96,7 +96,7 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
