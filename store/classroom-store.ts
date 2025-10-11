@@ -99,7 +99,8 @@ export const useClassroomStore = create<ClassroomStore>()(
 
             // Force refresh data (ignores cache)
             refreshData: async () => {
-                await fetch('/api/assignments/stats', { method: 'POST' });
+                // Clear server-side Redis cache via query parameter
+                await fetch('/api/assignments/stats?refresh=true');
 
                 // Clear client cache
                 set({ lastFetched: null });

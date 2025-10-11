@@ -313,7 +313,7 @@ async function fetchClassroomData(
     };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await auth();
 
@@ -326,11 +326,20 @@ export async function GET() {
 
         const userId = session.user?.id || session.user?.email || 'default';
 
-        // Check Vercel KV cache first
-        const cachedData = await getCachedData(userId);
-        if (cachedData) {
-            console.log(`✅ Serving cached data for user: ${userId}`);
-            return NextResponse.json(cachedData);
+        // Check for force refresh parameter
+        const { searchParams } = new URL(request.url);
+        const forceRefresh = searchParams.get('refresh') === 'true';
+
+        if (forceRefresh) {
+            console.log(`🔄 Force refresh requested - clearing cache for user: ${userId}`);
+            await clearUserCache(userId);
+        } else {
+            // Check Vercel KV cache first
+            const cachedData = await getCachedData(userId);
+            if (cachedData) {
+                console.log(`✅ Serving cached data for user: ${userId}`);
+                return NextResponse.json(cachedData);
+            }
         }
 
         console.log(`🔄 Cache miss - fetching fresh data for user: ${userId}`);
@@ -384,7 +393,7 @@ export async function POST(request: Request) {
         }
 
         const userId = session.user?.id;
-        if(!userId) return NextResponse.json(
+        if (!userId) return NextResponse.json(
             { error: "User ID not found" },
             { status: 400 }
         );
