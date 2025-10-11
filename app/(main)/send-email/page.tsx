@@ -5,7 +5,7 @@ import { PanelLeft, PanelRight } from 'lucide-react'
 import ProfessorList from './ProfessorsList'
 import EmailComposer from './EmailComposer'
 import { useEffect, useState } from 'react'
-import { getAllProfessors } from './actions/get-professor-details'
+import { useClassroomStore } from '@/store/classroom-store'
 import UILoading from '@/components/UILoading'
 import {
   Sidebar,
@@ -41,48 +41,29 @@ function ProfessorSidebar({ professors, selectedProfessor, onSelectProfessor }: 
 }
 
 export default function SendEmail() {
-  const [professors, setProfessors] = useState<Professor[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null)
   const [professorListOpen, setProfessorListOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Get professors from Zustand store
+  const { professors, isLoading, fetchClassroomData } = useClassroomStore();
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
+
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Fetch data from store
   useEffect(() => {
-    const cached = sessionStorage.getItem('professors')
-    if (cached) {
-      setProfessors(JSON.parse(cached))
-      setLoading(false)
-      return
-    }
+    fetchClassroomData();
+  }, [fetchClassroomData]);
 
-    const fetchProfessors = async () => {
-      try {
-        const data = await getAllProfessors()
-
-        if (Array.isArray(data)) {
-          setProfessors(data)
-          sessionStorage.setItem('professors', JSON.stringify(data))
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProfessors()
-  }, [])
-
-  if (loading) return <UILoading/>
+  if (isLoading) return <UILoading />
 
   if (isMobile) {
     return (
@@ -93,7 +74,7 @@ export default function SendEmail() {
             <SidebarTrigger className="absolute top-2 right-2 z-50" />
           </div>
         </div>
-        <ProfessorSidebar 
+        <ProfessorSidebar
           professors={professors}
           selectedProfessor={selectedProfessor}
           onSelectProfessor={setSelectedProfessor}
@@ -104,12 +85,12 @@ export default function SendEmail() {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[500px] rounded-lg border">
-      <ResizablePanel 
+      <ResizablePanel
         defaultSize={professorListOpen ? 60 : 100}
         className="relative"
       >
         <EmailComposer selectedProfessor={selectedProfessor} />
-        
+
         {/* Toggle button when professor list is closed */}
         {!professorListOpen && (
           <Button
@@ -126,9 +107,9 @@ export default function SendEmail() {
       {professorListOpen && (
         <>
           <ResizableHandle withHandle />
-          
-          <ResizablePanel 
-            defaultSize={30} 
+
+          <ResizablePanel
+            defaultSize={30}
             minSize={25}
             maxSize={40}
             className="relative"
@@ -138,7 +119,7 @@ export default function SendEmail() {
               selectedProfessor={selectedProfessor}
               onSelectProfessor={setSelectedProfessor}
             />
-            
+
             {/* Toggle button when professor list is open */}
             <Button
               variant="ghost"

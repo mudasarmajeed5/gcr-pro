@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useClassroomStore } from '@/store/classroom-store';
+import { Professor } from '@/types/all-data';
 import {
     Card,
     CardHeader,
@@ -14,7 +15,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, MapPin } from 'lucide-react';
-import { getAllProfessors, Professor } from '../../send-email/actions/get-professor-details';
 import InstructorCard from './components/InstructorCard';
 import RecentAssignmentsCard from './components/RecentAssignments';
 import CourseMaterialsCard from './components/CourseMaterialCard';
@@ -26,30 +26,31 @@ export default function CoursePage() {
     const router = useRouter();
     const params = useParams();
     const [courseInstructor, setCourseInstructor] = useState<Professor>()
-    const [professorLoading, setProfessorLoading] = useState(false);
     const courseId = params.courseId as string;
-    const getProfessor = async (courseId: string) => {
-        setProfessorLoading(true)
-        const professors = await getAllProfessors();
-        const prof = professors.find((professor) => professor.courseId == courseId)
-        setCourseInstructor(prof);
-        setProfessorLoading(false);
-    }
 
     const {
         fetchClassroomData,
         isLoading,
         getAssignmentsByCourseId,
         getCourseById,
-        getMaterialsByCourseId
+        getMaterialsByCourseId,
+        getProfessorsByCourseId
     } = useClassroomStore();
 
-    const courseMaterials = getMaterialsByCourseId(courseId)
+    const courseMaterials = getMaterialsByCourseId(courseId);
+    const courseProfessors = getProfessorsByCourseId(courseId);
+
     // Fetch store data if stale
     useEffect(() => {
         fetchClassroomData();
-        getProfessor(courseId)
     }, [fetchClassroomData]);
+
+    // Set course instructor from Zustand store
+    useEffect(() => {
+        if (courseProfessors.length > 0) {
+            setCourseInstructor(courseProfessors[0]); // Get first professor
+        }
+    }, [courseProfessors]);
 
     // Get course and assignments
     const course = getCourseById(courseId);
@@ -168,7 +169,7 @@ export default function CoursePage() {
                 <div className="space-y-6">
                     <CourseMaterialsCard courseMaterials={courseMaterials} courseId={courseId} isLoading={isLoading} />
 
-                    <InstructorCard courseInstructor={courseInstructor} isLoading={professorLoading} />
+                    <InstructorCard courseInstructor={courseInstructor} isLoading={isLoading} />
                     <Card>
                         <CardHeader>
                             <CardTitle>Quick Links</CardTitle>

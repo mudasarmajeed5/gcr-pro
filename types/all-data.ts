@@ -141,6 +141,15 @@ export interface Course {
     courseState: string;
     alternateLink: string;
 }
+
+export interface Professor {
+    courseId: string;
+    courseName: string;
+    id: string;
+    name: string;
+    email: string;
+}
+
 export interface Material {
     driveFile?: {
         driveFile: {

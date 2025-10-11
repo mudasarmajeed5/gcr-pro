@@ -1,5 +1,5 @@
 // store/classroom-store.ts
-import { Announcement, CourseWorkMaterial } from '@/types/all-data';
+import { Announcement, CourseWorkMaterial, Professor } from '@/types/all-data';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { StoreAssignment as Assignment } from '@/types/all-data';
@@ -12,8 +12,9 @@ interface ClassroomStore {
     courses: Course[];
     assignments: Assignment[];
     stats: ClassroomStats | null;
-    materials: CourseWorkMaterial[]
-    announcements: Announcement[]
+    materials: CourseWorkMaterial[];
+    announcements: Announcement[];
+    professors: Professor[];
     // Loading states
     isLoading: boolean;
     error: string | null;
@@ -33,6 +34,7 @@ interface ClassroomStore {
     getAssignmentsByStatus: (status: Assignment['submissionState']) => Assignment[];
     getMaterialsByCourseId: (courseId: string) => CourseWorkMaterial[];
     getAnnouncementsByCourseId: (courseId: string) => Announcement[];
+    getProfessorsByCourseId: (courseId: string) => Professor[];
     // Utility methods
     isDataStale: () => boolean;
     shouldRefresh: () => boolean;
@@ -54,6 +56,7 @@ export const useClassroomStore = create<ClassroomStore>()(
             lastFetched: null,
             announcements: [],
             materials: [],
+            professors: [],
 
             // Fetch all classroom data from the unified endpoint
             fetchClassroomData: async () => {
@@ -86,6 +89,7 @@ export const useClassroomStore = create<ClassroomStore>()(
                         error: null,
                         materials: data.materials || [],
                         announcements: data.announcements || [],
+                        professors: data.professors || [],
                         lastFetched: Date.now(),
                     });
                 } catch (error) {
@@ -99,14 +103,37 @@ export const useClassroomStore = create<ClassroomStore>()(
 
             // Force refresh data (ignores cache)
             refreshData: async () => {
-                // Clear server-side Redis cache via query parameter
-                await fetch('/api/assignments/stats?refresh=true');
+                // Set loading state immediately
+                set({ isLoading: true, error: null, lastFetched: null });
 
-                // Clear client cache
-                set({ lastFetched: null });
+                try {
+                    // Clear server-side Redis cache via query parameter
+                    const response = await fetch('/api/assignments/stats?refresh=true');
 
-                // Fetch fresh data
-                return get().fetchClassroomData();
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    set({
+                        courses: data.courses || [],
+                        assignments: data.assignments || [],
+                        stats: data.stats || null,
+                        isLoading: false,
+                        error: null,
+                        materials: data.materials || [],
+                        announcements: data.announcements || [],
+                        professors: data.professors || [],
+                        lastFetched: Date.now(),
+                    });
+                } catch (error) {
+                    set({
+                        isLoading: false,
+                        error: error instanceof Error ? error.message : 'Unknown error occurred',
+                    });
+                    throw error;
+                }
             },
 
             // Get course by ID
@@ -125,6 +152,12 @@ export const useClassroomStore = create<ClassroomStore>()(
             getAnnouncementsByCourseId: (courseId: string) => {
                 return get().announcements.filter(announcement => announcement.courseId === courseId);
             },
+
+            // Get professors for a specific course
+            getProfessorsByCourseId: (courseId: string) => {
+                return get().professors.filter(prof => prof.courseId === courseId);
+            },
+
             // Get assignment by ID
             getAssignmentById: (assignmentId: string) => {
                 return get().assignments.find(assignment => assignment.id === assignmentId);
@@ -178,6 +211,7 @@ export const useClassroomStore = create<ClassroomStore>()(
                     lastFetched: null,
                     announcements: [],
                     materials: [],
+                    professors: [],
                 });
             },
         }),
@@ -191,6 +225,7 @@ export const useClassroomStore = create<ClassroomStore>()(
                 lastFetched: state.lastFetched,
                 announcements: state.announcements,
                 materials: state.materials,
+                professors: state.professors,
             }),
         }
     )

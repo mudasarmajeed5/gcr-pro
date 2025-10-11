@@ -1,15 +1,28 @@
-// Skeleton for stats cards
+// Enhanced skeleton for stat cards
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+
 export const StatCardSkeleton = () => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-4" />
-        </CardHeader>
-        <CardContent>
-            <Skeleton className="h-8 w-16 mb-2" />
-            <Skeleton className="h-3 w-32" />
-        </CardContent>
-    </Card>
+  <Card className="border-border/50 shadow-sm">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+      {/* Title placeholder */}
+      <Skeleton className="h-4 w-24" />
+      {/* Icon placeholder */}
+      <Skeleton className="h-5 w-5 rounded-full" />
+    </CardHeader>
+
+    <CardContent>
+      {/* Big number */}
+      <Skeleton className="h-14 w-20 mb-3" />
+
+      {/* Progress bar placeholder */}
+      <Skeleton className="h-2 w-full rounded-full mb-3" />
+
+      {/* Bottom text + button row */}
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-5 w-16" />
+      </div>
+    </CardContent>
+  </Card>
 );

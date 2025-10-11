@@ -2,9 +2,11 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { kv } from "@vercel/kv";
-import { Announcement, CourseWorkMaterial } from "@/types/all-data";
+import { Announcement, CourseWorkMaterial, Professor } from "@/types/all-data";
 import { Material } from "@/types/all-data";
+import { getCachedData, setCacheData, clearUserCache } from "@/lib/classroom/cache-helpers";
+import { checkIfOverdue } from "@/lib/classroom/date-helpers";
+import { fetchCourseProfessors } from "@/lib/classroom/professor-helpers";
 
 interface Assignment {
     id: string;
@@ -72,6 +74,7 @@ interface ClassroomData {
     materials: CourseWorkMaterial[];
     announcements: Announcement[];
     assignments: Assignment[];
+    professors: Professor[];
     stats: ClassroomStats;
 }
 
@@ -95,54 +98,7 @@ interface CourseDataResult {
     submissions: StudentSubmission[];
     announcements: Announcement[];
     courseWorkMaterials: CourseWorkMaterial[];
-}
-
-const CACHE_TTL = 30 * 60; // 30 minutes in seconds
-
-function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
-    if (!assignment.dueDate) return false;
-
-    const dueDate = new Date(
-        assignment.dueDate.year,
-        assignment.dueDate.month - 1,
-        assignment.dueDate.day
-    );
-
-    if (assignment.dueTime) {
-        dueDate.setHours(assignment.dueTime.hours || 23);
-        dueDate.setMinutes(assignment.dueTime.minutes || 59);
-    } else {
-        dueDate.setHours(23, 59, 59, 999);
-    }
-
-    return currentDate > dueDate;
-}
-
-async function getCachedData(userId: string): Promise<ClassroomData | null> {
-    try {
-        const cached = await kv.get(`classroom:${userId}`);
-        return cached as ClassroomData | null;
-    } catch (error) {
-        console.warn("Vercel KV get error:", error);
-        return null;
-    }
-}
-
-async function setCacheData(userId: string, data: ClassroomData): Promise<void> {
-    try {
-        await kv.setex(`classroom:${userId}`, CACHE_TTL, JSON.stringify(data));
-    } catch (error) {
-        console.warn("Vercel KV set error:", error);
-        // Cache failure shouldn't break the app
-    }
-}
-
-async function clearUserCache(userId: string): Promise<void> {
-    try {
-        await kv.del(`classroom:${userId}`);
-    } catch (error) {
-        console.warn("Vercel KV delete error:", error);
-    }
+    professors: Professor[];
 }
 
 async function fetchClassroomData(
@@ -155,6 +111,7 @@ async function fetchClassroomData(
             materials: [],
             announcements: [],
             assignments: [],
+            professors: [],
             stats: {
                 totalAssignments: 0,
                 turnedIn: 0,
@@ -169,7 +126,7 @@ async function fetchClassroomData(
 
     const courseDataPromises = courses.map(async (course) => {
         try {
-            const [assignmentsResponse, submissionsResponse, announcementsResponse, materialsResponse] = await Promise.all([
+            const [assignmentsResponse, submissionsResponse, announcementsResponse, materialsResponse, professors] = await Promise.all([
                 fetch(
                     `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
                     { headers }
@@ -185,7 +142,8 @@ async function fetchClassroomData(
                 fetch(
                     `https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials?fields=courseWorkMaterial(id,title,description,materials,creationTime)&pageSize=1000`,
                     { headers }
-                )
+                ),
+                fetchCourseProfessors(course.id, course.name, headers)
             ]);
 
             const [assignmentsData, submissionsData, announcementsData, materialsData] = await Promise.all([
@@ -200,7 +158,8 @@ async function fetchClassroomData(
                 assignments: assignmentsData.courseWork || [],
                 submissions: submissionsData.studentSubmissions || [],
                 announcements: announcementsData.announcements || [],
-                courseWorkMaterials: materialsData.courseWorkMaterial || []
+                courseWorkMaterials: materialsData.courseWorkMaterial || [],
+                professors: professors
             };
 
             return result;
@@ -211,7 +170,8 @@ async function fetchClassroomData(
                 assignments: [],
                 submissions: [],
                 announcements: [],
-                courseWorkMaterials: []
+                courseWorkMaterials: [],
+                professors: []
             };
         }
     });
@@ -221,6 +181,7 @@ async function fetchClassroomData(
     const allAssignments: Assignment[] = [];
     const allCourseWork: CourseWorkMaterial[] = [];
     const allAnnouncements: Announcement[] = [];
+    const allProfessors: Professor[] = [];
 
     let totalAssignments = 0;
     let turnedIn = 0;
@@ -231,7 +192,7 @@ async function fetchClassroomData(
 
     const now = new Date();
 
-    courseData.forEach(({ courseId, assignments, submissions, announcements, courseWorkMaterials }) => {
+    courseData.forEach(({ courseId, assignments, submissions, announcements, courseWorkMaterials, professors }) => {
         const submissionMap = new Map(
             submissions.map((s: StudentSubmission) => [s.courseWorkId, s])
         );
@@ -242,6 +203,10 @@ async function fetchClassroomData(
 
         announcements.forEach((item: Announcement) => {
             allAnnouncements.push({ ...item, courseId });
+        });
+
+        professors.forEach((prof: Professor) => {
+            allProfessors.push(prof);
         });
 
         assignments.forEach((rawAssignment: any) => {
@@ -301,6 +266,7 @@ async function fetchClassroomData(
         materials: allCourseWork,
         announcements: allAnnouncements,
         assignments: allAssignments,
+        professors: allProfessors,
         stats: {
             totalAssignments,
             turnedIn,
