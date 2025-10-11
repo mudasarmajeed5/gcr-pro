@@ -40,6 +40,14 @@ export default {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Only allow sign-in from @students.au.edu.pk email addresses
+      const email = user.email || profile?.email;
+      if (!email || !email.endsWith('@students.au.edu.pk')) {
+        return false; // Deny sign-in
+      }
+      return true; // Allow sign-in
+    },
 
     async jwt({ token, account }) {
       if (account) {

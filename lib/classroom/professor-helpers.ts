@@ -70,7 +70,7 @@ export async function fetchCourseProfessors(
         const data = await response.json();
         const teachers = data.teachers || [];
 
-        return teachers.map((teacher: any) => {
+        return teachers.map((teacher: { userId?: string; profile?: { name?: { fullName?: string } } }) => {
             const fullName = teacher.profile?.name?.fullName ?? "Unknown";
             return {
                 courseId,
