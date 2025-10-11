@@ -2,8 +2,10 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { kv } from "@vercel/kv";
 import { Announcement, CourseWorkMaterial } from "@/types/all-data";
 import { Material } from "@/types/all-data";
+
 interface Assignment {
     id: string;
     title: string;
@@ -21,13 +23,13 @@ interface Assignment {
     submissionState: 'TURNED_IN' | 'NEW' | 'CREATED' | 'RETURNED';
     late?: boolean;
     courseId: string;
-    submission?: any;
+    submission?: StudentSubmission | null;
     isOverdue?: boolean;
     materials?: Material[];
 }
 
 interface StudentSubmission {
-    submissionHistory: Array<{
+    submissionHistory?: Array<{
         stateHistory: {
             state: string;
             stateTimestamp: string;
@@ -39,7 +41,6 @@ interface StudentSubmission {
     assignedGrade?: number;
     courseWorkId: string;
 }
-
 
 interface Course {
     id: string;
@@ -66,11 +67,40 @@ interface ClassroomStats {
     percentage: number;
 }
 
-// Helper function to check if assignment is overdue
+interface ClassroomData {
+    courses: Course[];
+    materials: CourseWorkMaterial[];
+    announcements: Announcement[];
+    assignments: Assignment[];
+    stats: ClassroomStats;
+}
+
+interface CourseDataResult {
+    courseId: string;
+    assignments: Array<{
+        id: string;
+        title: string;
+        dueDate?: {
+            year: number;
+            month: number;
+            day: number;
+        };
+        dueTime?: {
+            hours: number;
+            minutes: number;
+        };
+        maxPoints?: number;
+        materials?: Material[];
+    }>;
+    submissions: StudentSubmission[];
+    announcements: Announcement[];
+    courseWorkMaterials: CourseWorkMaterial[];
+}
+
+const CACHE_TTL = 30 * 60; // 30 minutes in seconds
+
 function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
-    if (!assignment.dueDate) {
-        return false;
-    }
+    if (!assignment.dueDate) return false;
 
     const dueDate = new Date(
         assignment.dueDate.year,
@@ -88,6 +118,201 @@ function checkIfOverdue(assignment: Assignment, currentDate: Date): boolean {
     return currentDate > dueDate;
 }
 
+async function getCachedData(userId: string): Promise<ClassroomData | null> {
+    try {
+        const cached = await kv.get(`classroom:${userId}`);
+        return cached as ClassroomData | null;
+    } catch (error) {
+        console.warn("Vercel KV get error:", error);
+        return null;
+    }
+}
+
+async function setCacheData(userId: string, data: ClassroomData): Promise<void> {
+    try {
+        await kv.setex(`classroom:${userId}`, CACHE_TTL, JSON.stringify(data));
+    } catch (error) {
+        console.warn("Vercel KV set error:", error);
+        // Cache failure shouldn't break the app
+    }
+}
+
+async function clearUserCache(userId: string): Promise<void> {
+    try {
+        await kv.del(`classroom:${userId}`);
+    } catch (error) {
+        console.warn("Vercel KV delete error:", error);
+    }
+}
+
+async function fetchClassroomData(
+    headers: Record<string, string>,
+    courses: Course[]
+): Promise<ClassroomData> {
+    if (!courses.length) {
+        return {
+            courses: [],
+            materials: [],
+            announcements: [],
+            assignments: [],
+            stats: {
+                totalAssignments: 0,
+                turnedIn: 0,
+                unsubmitted: 0,
+                missed: 0,
+                totalPoints: 0,
+                earnedPoints: 0,
+                percentage: 0,
+            }
+        };
+    }
+
+    const courseDataPromises = courses.map(async (course) => {
+        try {
+            const [assignmentsResponse, submissionsResponse, announcementsResponse, materialsResponse] = await Promise.all([
+                fetch(
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
+                    { headers }
+                ),
+                fetch(
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late)&pageSize=1000`,
+                    { headers }
+                ),
+                fetch(
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/announcements?fields=announcements(id,text,creationTime,materials)&pageSize=1000`,
+                    { headers }
+                ),
+                fetch(
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials?fields=courseWorkMaterial(id,title,description,materials,creationTime)&pageSize=1000`,
+                    { headers }
+                )
+            ]);
+
+            const [assignmentsData, submissionsData, announcementsData, materialsData] = await Promise.all([
+                assignmentsResponse.ok ? assignmentsResponse.json() : { courseWork: [] },
+                submissionsResponse.ok ? submissionsResponse.json() : { studentSubmissions: [] },
+                announcementsResponse.ok ? announcementsResponse.json() : { announcements: [] },
+                materialsResponse.ok ? materialsResponse.json() : { courseWorkMaterial: [] }
+            ]);
+
+            const result: CourseDataResult = {
+                courseId: course.id,
+                assignments: assignmentsData.courseWork || [],
+                submissions: submissionsData.studentSubmissions || [],
+                announcements: announcementsData.announcements || [],
+                courseWorkMaterials: materialsData.courseWorkMaterial || []
+            };
+
+            return result;
+        } catch (error) {
+            console.warn(`Failed to process course ${course.id}:`, error);
+            return {
+                courseId: course.id,
+                assignments: [],
+                submissions: [],
+                announcements: [],
+                courseWorkMaterials: []
+            };
+        }
+    });
+
+    const courseData = await Promise.all(courseDataPromises);
+
+    const allAssignments: Assignment[] = [];
+    const allCourseWork: CourseWorkMaterial[] = [];
+    const allAnnouncements: Announcement[] = [];
+
+    let totalAssignments = 0;
+    let turnedIn = 0;
+    let unsubmitted = 0;
+    let missed = 0;
+    let totalPoints = 0;
+    let earnedPoints = 0;
+
+    const now = new Date();
+
+    courseData.forEach(({ courseId, assignments, submissions, announcements, courseWorkMaterials }) => {
+        const submissionMap = new Map(
+            submissions.map((s: StudentSubmission) => [s.courseWorkId, s])
+        );
+
+        courseWorkMaterials.forEach((item: CourseWorkMaterial) => {
+            allCourseWork.push({ ...item, courseId });
+        });
+
+        announcements.forEach((item: Announcement) => {
+            allAnnouncements.push({ ...item, courseId });
+        });
+
+        assignments.forEach((rawAssignment: any) => {
+            const submission = submissionMap.get(rawAssignment.id);
+            const isOverdue = checkIfOverdue(
+                {
+                    id: rawAssignment.id,
+                    title: rawAssignment.title,
+                    dueDate: rawAssignment.dueDate,
+                    dueTime: rawAssignment.dueTime,
+                    maxPoints: rawAssignment.maxPoints,
+                    courseId,
+                    materials: rawAssignment.materials || [],
+                    submissionState: 'NEW'
+                } as Assignment,
+                now
+            );
+
+            allAssignments.push({
+                id: rawAssignment.id,
+                title: rawAssignment.title,
+                dueDate: rawAssignment.dueDate,
+                dueTime: rawAssignment.dueTime,
+                maxPoints: rawAssignment.maxPoints,
+                assignedGrade: submission?.assignedGrade,
+                submissionState: (submission?.state as Assignment['submissionState']) || 'NEW',
+                late: submission?.late || false,
+                courseId,
+                materials: rawAssignment.materials || [],
+                submission: submission || null,
+                isOverdue
+            });
+
+            totalAssignments++;
+
+            if (submission) {
+                if (submission.state === 'TURNED_IN' || submission.state === 'RETURNED') {
+                    turnedIn++;
+
+                    if (submission.assignedGrade !== undefined && submission.assignedGrade !== null) {
+                        earnedPoints += submission.assignedGrade;
+                        totalPoints += rawAssignment.maxPoints || 0;
+                    }
+                } else {
+                    isOverdue ? missed++ : unsubmitted++;
+                }
+            } else {
+                isOverdue ? missed++ : unsubmitted++;
+            }
+        });
+    });
+
+    const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
+
+    return {
+        courses,
+        materials: allCourseWork,
+        announcements: allAnnouncements,
+        assignments: allAssignments,
+        stats: {
+            totalAssignments,
+            turnedIn,
+            unsubmitted,
+            missed,
+            totalPoints: Math.round(totalPoints),
+            earnedPoints: Math.round(earnedPoints * 100) / 100,
+            percentage: Math.round(percentage * 10) / 10,
+        }
+    };
+}
+
 export async function GET() {
     try {
         const session = await auth();
@@ -99,14 +324,24 @@ export async function GET() {
             );
         }
 
-        // Optimized headers for all requests
+        const userId = session.user?.id || session.user?.email || 'default';
+
+        // Check Vercel KV cache first
+        const cachedData = await getCachedData(userId);
+        if (cachedData) {
+            console.log(`✅ Serving cached data for user: ${userId}`);
+            return NextResponse.json(cachedData);
+        }
+
+        console.log(`🔄 Cache miss - fetching fresh data for user: ${userId}`);
+
         const headers = {
             Authorization: `Bearer ${session.accessToken}`,
             'Accept-Encoding': 'gzip',
             'Accept': 'application/json',
         };
 
-        // Fetch courses with field filtering
+        // Fetch courses
         const coursesResponse = await fetch(
             "https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE",
             { headers }
@@ -119,164 +354,47 @@ export async function GET() {
         const coursesData = await coursesResponse.json();
         const courses: Course[] = coursesData.courses || [];
 
-        // Fetch assignments AND submissions for all courses in parallel
-        const courseDataPromises = courses.map(async (course) => {
-            try {
-                // Make both requests in parallel for each course
-                const [assignmentsResponse, submissionsResponse, announcementsResponse, courseWorkMaterialsResponse] = await Promise.all([
-                    // Get assignments
-                    fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
-                        { headers }
-                    ),
-                    // Get ALL submissions for this course at once
-                    fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me&fields=studentSubmissions(courseWorkId,state,assignedGrade,late,submissionHistory)&pageSize=1000`,
-                        { headers }
-                    ),
-                    fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/announcements?fields=announcements(id,text,creationTime,materials)&pageSize=1000`, { headers }
-                    ),
-                    fetch(
-                        `https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials?fields=courseWorkMaterial(id,title,description,materials,creationTime)&pageSize=1000`,
-                        { headers }
-                    )
-                ]);
-                let courseWorkMaterials = []
-                let assignments = [];
-                let submissions = [];
-                let announcements = [];
-                if (assignmentsResponse.ok) {
-                    const assignmentsData = await assignmentsResponse.json();
-                    assignments = assignmentsData.courseWork || [];
-                }
+        // Fetch and process all classroom data
+        const classroomData = await fetchClassroomData(headers, courses);
 
-                if (submissionsResponse.ok) {
-                    const submissionsData = await submissionsResponse.json();
-                    submissions = submissionsData.studentSubmissions || [];
-                }
-                if (announcementsResponse.ok) {
-                    const materialsData = await announcementsResponse.json();
-                    announcements = materialsData.announcements || [];
-                }
-                if (courseWorkMaterialsResponse.ok) {
-                    const courseWorkMaterialData = await courseWorkMaterialsResponse.json();
-                    courseWorkMaterials = courseWorkMaterialData.courseWorkMaterial || [];
-                }
+        // Cache the result in Vercel KV
+        await setCacheData(userId, classroomData);
 
-                return {
-                    announcements,
-                    courseWorkMaterials,
-                    courseId: course.id,
-                    assignments,
-                    submissions
-                };
-            } catch (error) {
-                console.warn(`Failed to process course ${course.id}:`, error);
-                return { courseId: course.id, assignments: [], submissions: [] };
-            }
-        });
-
-        const courseData = await Promise.all(courseDataPromises);
-
-        // Process and combine all data
-        const allAssignments: Assignment[] = [];
-        const allCourseWork: CourseWorkMaterial[] = [];
-        const allAnnouncements: Announcement[] = [];
-        let totalAssignments = 0;
-        let turnedIn = 0;
-        let unsubmitted = 0;
-        let missed = 0;
-        let totalPoints = 0;
-        let earnedPoints = 0;
-
-        const now = new Date();
-
-        // Process each course's data
-        courseData.forEach(({ courseId, assignments, submissions, announcements, courseWorkMaterials }) => {
-            // Create a map of submissions by courseWorkId for quick lookup
-            const submissionMap = new Map();
-            submissions.forEach((submission: StudentSubmission) => {
-                submissionMap.set(submission.courseWorkId, submission);
-            });
-            courseWorkMaterials.forEach((rawCourseWork: any) => {
-                allCourseWork.push({ ...rawCourseWork, courseId });
-            })
-            announcements.forEach((rawMaterial: any) => {
-                allAnnouncements.push({ ...rawMaterial, courseId })
-            })
-            // Process each assignment
-            assignments.forEach((rawAssignment: any) => {
-                totalAssignments++;
-                const submission = submissionMap.get(rawAssignment.id);
-                const isOverdue = checkIfOverdue(rawAssignment, now);
-                const assignment: Assignment = {
-                    id: rawAssignment.id,
-                    title: rawAssignment.title,
-                    dueDate: rawAssignment.dueDate,
-                    dueTime: rawAssignment.dueTime,
-                    maxPoints: rawAssignment.maxPoints,
-                    assignedGrade: submission?.assignedGrade,
-                    submissionState: submission?.state || 'NEW',
-                    late: submission?.late || false,
-                    courseId,
-                    materials: rawAssignment.materials || [],
-                    submission: submission || null,
-                    isOverdue
-                };
-
-                allAssignments.push(assignment);
-
-                // Calculate stats
-                if (submission) {
-                    if (submission.state === 'TURNED_IN' || submission.state === 'RETURNED') {
-                        turnedIn++;
-
-                        // Only add points if graded
-                        if (submission.assignedGrade !== undefined && submission.assignedGrade !== null) {
-                            earnedPoints += submission.assignedGrade;
-                            totalPoints += rawAssignment.maxPoints || 0;
-                        }
-                    } else {
-                        if (isOverdue) missed++;
-                        else unsubmitted++;
-                    }
-                } else {
-                    // No submission found
-                    if (isOverdue) missed++;
-                    else unsubmitted++;
-                }
-            });
-        });
-
-        // Calculate percentage
-        const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
-        const stats: ClassroomStats = {
-            totalAssignments,
-            turnedIn,
-            unsubmitted,
-            missed,
-            totalPoints: Math.round(totalPoints),
-            earnedPoints: Math.round(earnedPoints * 100) / 100,
-            percentage: Math.round(percentage * 10) / 10,
-        };
-
-        // Return comprehensive data
-        const responseData = {
-            courses,
-            materials: allCourseWork,
-            announcements: allAnnouncements,
-            assignments: allAssignments,
-            stats
-        };
-
-
-        return NextResponse.json(responseData);
+        return NextResponse.json(classroomData);
 
     } catch (error) {
         console.error("Error fetching classroom data:", error);
         return NextResponse.json(
             { error: "Failed to fetch classroom data. Please login again." },
+            { status: 500 }
+        );
+    }
+}
+
+// Optional: POST endpoint to manually clear cache (e.g., after grade posted)
+export async function POST(request: Request) {
+    try {
+        const session = await auth();
+
+        if (!session?.accessToken) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const userId = session.user?.id;
+        if(!userId) return NextResponse.json(
+            { error: "User ID not found" },
+            { status: 400 }
+        );
+        await clearUserCache(userId);
+
+        return NextResponse.json({ message: "Cache cleared successfully" });
+    } catch (error) {
+        console.error("Error clearing cache:", error);
+        return NextResponse.json(
+            { error: "Failed to clear cache" },
             { status: 500 }
         );
     }

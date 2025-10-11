@@ -99,7 +99,12 @@ export const useClassroomStore = create<ClassroomStore>()(
 
             // Force refresh data (ignores cache)
             refreshData: async () => {
-                set({ lastFetched: null }); // Reset timestamp to force refresh
+                await fetch('/api/assignments/stats', { method: 'POST' });
+
+                // Clear client cache
+                set({ lastFetched: null });
+
+                // Fetch fresh data
                 return get().fetchClassroomData();
             },
 
