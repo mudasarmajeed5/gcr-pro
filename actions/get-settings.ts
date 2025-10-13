@@ -1,7 +1,6 @@
 "use server"
 import { auth } from "@/auth"
 import { connectDB } from "@/lib/connectDB";
-import { decrypt } from "@/lib/crypto-helper";
 import UserSettings from "@/models/UserSettings";
 
 export interface UserSettingsType {
@@ -30,14 +29,6 @@ export async function getSettings(): Promise<ServerResponse<UserSettingsType>> {
     if (!user) return { success: false, message: "User not found" };
 
     const parsedUser: UserSettingsType = JSON.parse(JSON.stringify(user));
-
-    if (parsedUser.smtpPassword) {
-      try {
-        parsedUser.smtpPassword = decrypt(parsedUser.smtpPassword);
-      } catch {
-        console.log("Error decrypting password.")
-      }
-    }
 
     return { success: true, message: parsedUser };
   } catch (error) {

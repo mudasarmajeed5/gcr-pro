@@ -2,7 +2,6 @@
 import { auth } from "@/auth" // your auth config
 import UserSettings from "@/models/UserSettings";
 import { connectDB } from "@/lib/connectDB";
-import { encrypt } from "@/lib/crypto-helper";
 import { THEMES } from "@/constants/themes";
 export async function saveSettings(formData: FormData) {
     try {
@@ -12,7 +11,6 @@ export async function saveSettings(formData: FormData) {
         if (!userId) return { success: false, message: "Unauthorized" }
         const smtpPassword = formData.get("smtpPassword") as string;
         const smtp = smtpPassword.replace(/\s+/g, "");
-        const encryptedSmtpKey = encrypt(smtp);
         const showGradeCard = formData.get("showGradeCard") === "on"
         const themeId = (formData.get("themeId") as string) || undefined
 
@@ -23,7 +21,7 @@ export async function saveSettings(formData: FormData) {
         const updatedSettings = await UserSettings.findOneAndUpdate(
             { userId: userId },
             {
-                smtpPassword: encryptedSmtpKey,
+                smtpPassword: smtp,
                 showGradeCard,
                 ...(themeId ? { themeId } : {})
             },
