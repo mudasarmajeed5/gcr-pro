@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadToGridFS, downloadFromGridFS } from '@/lib/gridfs';
+import { uploadToGridFS } from '@/lib/gridfs';
 import { createSolvedDocument } from '@/utils/documentUtils';
-import { extractTextFromDocx } from '@/utils/extract-title';
+import { extractTextFromFile } from '@/utils/extract-title';
 import { auth } from '@/auth';
 import { connectDB } from '@/lib/connectDB';
 import AssignmentSolver from '@/models/AssignmentSolver';
-import { Readable } from 'stream';
 
 async function callGeminiAPI(text: string, instructions: string): Promise<string> {
   const prompt = `
@@ -65,19 +64,28 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extract text
-    const extractedText = await extractTextFromDocx(buffer);
+    // Extract text based on file type
+    const extractedText = await extractTextFromFile(buffer, file.name);
 
     // Solve with Gemini
     const solution = await callGeminiAPI(extractedText, instructions || '');
 
+    // Generate output filename (always .docx regardless of input format)
+    const baseFileName = file.name.replace(/\.(docx|pdf|txt)$/i, '');
+    const outputFileName = `solved_${baseFileName}.docx`;
+
     // Create solved document
     const solvedDocBuffer = await createSolvedDocument(file.name, solution, { name: session.user.name || 'Student', roll_number: session.user?.email?.split("@")[0] || 'N/A' });
+
+    // Validate the buffer is not empty
+    if (!solvedDocBuffer || solvedDocBuffer.length === 0) {
+      throw new Error('Generated document buffer is empty');
+    }
 
     // Upload solved document to GridFS
     const solvedFileId = await uploadToGridFS(
       solvedDocBuffer,
-      `solved_${file.name}`,
+      outputFileName,
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     );
 
@@ -96,17 +104,19 @@ export async function POST(request: NextRequest) {
       { upsert: true, new: true }
     );
 
-    // Download from GridFS to stream the actual stored file
-    const { stream: gridfsStream, filename, contentType } = await downloadFromGridFS(solvedFileId);
+    // Stream directly from memory to avoid GridFS streaming corruption
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(solvedDocBuffer));
+        controller.close();
+      }
+    });
 
-    // Convert Node.js Readable stream to Web ReadableStream
-    const webStream = Readable.toWeb(gridfsStream as Readable) as ReadableStream;
-
-    return new NextResponse(webStream, {
+    return new NextResponse(stream, {
       status: 200,
       headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="solved_${file.name}"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Disposition': `attachment; filename="${outputFileName}"`,
         'x-solved-file-id': solvedFileId.toString(),
         'x-assignment-id': assignmentMeta?._id ? String(assignmentMeta._id) : '',
       },

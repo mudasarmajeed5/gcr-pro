@@ -100,20 +100,26 @@ const ViewAssignment = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.name.endsWith('.docx')) {
+    const validExtensions = ['.docx', '.pdf', '.txt'];
+    const isValid = validExtensions.some(ext => file?.name.toLowerCase().endsWith(ext));
+
+    if (file && isValid) {
       setSelectedFile(file);
     } else {
-      alert('Please upload a .docx file');
+      alert('Please upload a .docx, .pdf, or .txt file');
     }
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     console.log(file)
-    if (file && file.name.endsWith('.docx')) {
+    const validExtensions = ['.docx', '.pdf', '.txt'];
+    const isValid = validExtensions.some(ext => file?.name.toLowerCase().endsWith(ext));
+
+    if (file && isValid) {
       setSelectedFile(file);
     } else {
-      alert('Please select a .docx file');
+      alert('Please select a .docx, .pdf, or .txt file');
     }
   };
 
@@ -362,14 +368,14 @@ const ViewAssignment = () => {
                   >
                     <FileText className="mx-auto h-12 w-12 text-purple-400 mb-4" />
                     <p className="text-lg font-medium text-muted-foreground mb-2">
-                      Drag & drop your .docx material here
+                      Drag & drop your assignment here
                     </p>
                     <p className="text-sm text-gray-500 mb-4">
-                      Or click to browse
+                      Supports .docx, .pdf, and .txt files
                     </p>
                     <Input
                       type="file"
-                      accept=".docx"
+                      accept=".docx,.pdf,.txt"
                       onChange={handleFileSelect}
                       id="file-input"
                       disabled={isSolving}

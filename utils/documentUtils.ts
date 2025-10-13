@@ -35,14 +35,16 @@ export async function createSolvedDocument(
     const logoBuffer = fs.readFileSync(logoPath);
 
     logoImage = new ImageRun({
-      data: Buffer.from(logoBuffer),
+      type: 'png',
+      data: logoBuffer,
       transformation: {
         width: 300,
         height: 300,
       },
-    } as any);
+    });
   } catch (error) {
     console.warn('Logo not found, proceeding without logo:', error);
+    // Continue without logo - this is not a critical error
   }
 
   const doc = new Document({
@@ -147,7 +149,7 @@ function convertMarkdownNodesToDocx(nodes: MarkdownNode[]): (Paragraph | Table)[
         elements.push(createHeading(node));
         break;
       case 'paragraph':
-        elements.push(createParagraph(node)); 
+        elements.push(createParagraph(node));
         break;
       case 'list':
         elements.push(...createList(node));
