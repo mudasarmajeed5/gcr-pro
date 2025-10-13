@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadToGridFS } from '@/lib/gridfs';
+import { uploadToGridFS, downloadFromGridFS } from '@/lib/gridfs';
 import { createSolvedDocument } from '@/utils/documentUtils';
 import { extractTextFromDocx } from '@/utils/extract-title';
 import { auth } from '@/auth';
 import { connectDB } from '@/lib/connectDB';
 import AssignmentSolver from '@/models/AssignmentSolver';
+import { Readable } from 'stream';
 
 async function callGeminiAPI(text: string, instructions: string): Promise<string> {
   const prompt = `
@@ -95,25 +96,19 @@ export async function POST(request: NextRequest) {
       { upsert: true, new: true }
     );
 
-    const solvedArrayBuffer = Buffer.isBuffer(solvedDocBuffer)
-      ? solvedDocBuffer.buffer.slice(solvedDocBuffer.byteOffset, solvedDocBuffer.byteOffset + solvedDocBuffer.byteLength)
-      : solvedDocBuffer;
-    const solvedBuffer = Buffer.isBuffer(solvedArrayBuffer)
-      ? solvedArrayBuffer
-      : Buffer.from(solvedArrayBuffer);
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new Uint8Array(solvedBuffer));
-        controller.close();
-      }
-    });
-    return new NextResponse(stream, {
+    // Download from GridFS to stream the actual stored file
+    const { stream: gridfsStream, filename, contentType } = await downloadFromGridFS(solvedFileId);
+
+    // Convert Node.js Readable stream to Web ReadableStream
+    const webStream = Readable.toWeb(gridfsStream as Readable) as ReadableStream;
+
+    return new NextResponse(webStream, {
       status: 200,
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="solved_${file.name}"`,
-        'x-solved-file-id': solvedFileId ? solvedFileId.toString() : String(solvedFileId),
-        'x-assignment-id': assignmentMeta?._id ? assignmentMeta._id.toString() : String(assignmentMeta?._id),
+        'x-solved-file-id': solvedFileId.toString(),
+        'x-assignment-id': assignmentMeta?._id ? String(assignmentMeta._id) : '',
       },
     });
   } catch (error) {
