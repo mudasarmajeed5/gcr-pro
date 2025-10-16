@@ -10,14 +10,14 @@ import { Toaster } from "sonner";
 export const metadata: Metadata = {
   title: "GCR PRO, AI Assignment Solver & Quiz Generator",
   description:
-    "GCR PRO helps students solve assignments instantly and generate quizzes with AI. Study smarter, save time, and boost productivity with Google Classroom support.",
+    "GCR PRO, specially built for Air University students, helps students solve assignments instantly and generate quizzes with AI. Study smarter and save time.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
     title: "GCR PRO, Smarter Learning with AI",
     description:
-      "AI-powered assignment solver and quiz generator for students. Works with Google Classroom to make learning easier.",
+      "GCR PRO, specially built for Air University students, is an AI-powered assignment solver and quiz generator that works with Google Classroom.",
     url: "https://gcrpro.app",
     siteName: "GCR PRO",
     images: [
@@ -34,14 +34,14 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GCR PRO, AI Assignment Solver & Quiz Generator",
     description:
-      "Save time, solve assignments, and generate quizzes with GCR PROs AI tools for students.",
+      "GCR PRO, specially built for Air University students, lets you save time, solve assignments, and generate quizzes with AI.",
     images: ["/og-image.png"],
   },
 };
 
 
 
-export const viewport: Viewport = {
+export const viewport: Viewport = { 
   maximumScale: 1,
   userScalable: false
 }
