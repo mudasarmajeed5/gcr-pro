@@ -91,6 +91,7 @@ export default async function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Inline script to apply saved theme variables immediately (prevents flash) */}
         <script dangerouslySetInnerHTML={{ __html: inlineScript }} />
+        <link rel="canonical" href="https://gcrpro.app" />
       </head>
       <body>
         <SessionProvider>
