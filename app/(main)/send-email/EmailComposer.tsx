@@ -177,11 +177,11 @@ export default function EmailComposer({ selectedProfessor }: EmailComposerProps)
                             <button
                                 disabled={isGenerating}
                                 type="button"
-                                className="text-primary border flex items-center gap-2 p-1 cursor-pointer rounded-md text-xs absolute right-2 top-8 disabled:animate-pulse disabled:text-yellow-500"
+                                className="text-primary rounded-full border-none flex items-center gap-2 p-2 cursor-pointer text-xs absolute right-2 bg-primary/20 bottom-4 disabled:bg-primary/60 disabled:text-black animate-pulse"
                                 onClick={() => generateEmailBody(emailData.body)}
                             >
-                                <span>Complete with AI</span>
-                                <Sparkles className="size-5" />
+                                <span className={`${isGenerating ? '':'hidden'}`}>Auto-Completing</span>
+                                <Sparkles className={`size-4`} />
                             </button>
                         </Hint>
                     </div>

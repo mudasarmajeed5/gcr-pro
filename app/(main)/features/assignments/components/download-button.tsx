@@ -2,17 +2,20 @@
 
 import React, { useState } from 'react';
 import { Download, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Assignment } from '@/types/Assignment';
 
 interface DownloadButtonProps {
   assignmentId: string;
   filename?: string;
   className?: string;
+  assignment?: Assignment; // For accessing originalName
 }
 
 export default function DownloadButton({
   assignmentId,
   filename,
-  className = ''
+  className = '',
+  assignment
 }: DownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -24,45 +27,20 @@ export default function DownloadButton({
     try {
       const response = await fetch(`/api/assignments/${assignmentId}/download`, {
         method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
+        headers: { 'Cache-Control': 'no-cache' },
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error('Download failed');
       }
 
-      // Get the blob and content type
       const blob = await response.blob();
-      const contentType = response.headers.get('Content-Type') || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
-      // Extract filename from headers or use provided/default
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let downloadFilename = filename || 'solved_assignment.docx';
-
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          downloadFilename = filenameMatch[1].replace(/['"]/g, '');
-        }
-      }
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([blob], { type: contentType }));
-
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.style.display = 'none';
       link.href = url;
-      link.download = downloadFilename;
-      link.setAttribute('download', downloadFilename);
-
-      // Append to body, click, and cleanup
+      link.download = filename ? `${filename}` : 'solved_assignment.docx';
       document.body.appendChild(link);
       link.click();
-
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
@@ -75,12 +53,7 @@ export default function DownloadButton({
     } catch (error) {
       console.error('Download error:', error);
       setDownloadStatus('error');
-
-      // Show user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : 'Download failed';
-      alert(`Download failed: ${errorMessage}`);
-
-      // Reset error state after a delay
+      alert('Download failed. Please try again.');
       setTimeout(() => setDownloadStatus('idle'), 3000);
     } finally {
       setIsDownloading(false);
@@ -129,18 +102,18 @@ export default function DownloadButton({
     `;
 
     if (isDownloading) {
-      return `${baseClasses} bg-muted/40 cursor-not-allowed text-muted-foreground`;
+      return `${baseClasses} bg-green-400 cursor-not-allowed text-white`;
     }
 
     if (downloadStatus === 'success') {
-      return `${baseClasses} bg-secondary hover:bg-secondary/90 text-secondary focus:ring-secondary`;
+      return `${baseClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500`;
     }
 
     if (downloadStatus === 'error') {
-      return `${baseClasses} bg-destructive hover:bg-destructive/90 text-destructive focus:ring-destructive`;
+      return `${baseClasses} bg-destructive hover:bg-destructive/90 text-destructive-foreground focus:ring-destructive`;
     }
 
-    return `${baseClasses} bg-secondary hover:bg-secondary/90 text-secondary focus:ring-secondary hover:shadow-md transform hover:-translate-y-0.5`;
+    return `${baseClasses} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 hover:shadow-md transform hover:-translate-y-0.5`;
   };
 
   return (

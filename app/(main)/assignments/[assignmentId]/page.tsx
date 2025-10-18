@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { usePreviewStore } from "@/store/preview-store";
 import { useParams } from "next/navigation";
+import { getStatusText, getStatusVariant } from "../../features/assignments/helpers/commons";
 import { useClassroomStore } from "@/store/classroom-store";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Material } from "@/types/all-data";
@@ -16,7 +17,12 @@ import { Button } from "@/components/ui/button";
 import useAuthUser from "@/hooks/use-auth-user";
 import { HashLoader } from "react-spinners";
 import { Progress } from "@/components/ui/progress";
+import { formatDueDate } from "@/utils/formatDueDate";
+import AlertTriangleGlobal from "@/components/AltertTriangle";
+import DownloadButton from "../../features/assignments/components/download-button";
+import { useSession } from "next-auth/react";
 const ViewAssignment = () => {
+  const { data: session } = useSession();
   const [progress, setProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const apiCompleteRef = useRef(false);
@@ -31,10 +37,8 @@ const ViewAssignment = () => {
   const course = assignment ? getCourseById(assignment.courseId) : null;
   const [isSolving, setIsSolving] = useState(false);
   const [solveError, setSolveError] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  console.log(authId)
   const handleMaterialDownload = (material: Material) => {
     const fileId = material.driveFile?.driveFile?.id;
     const url = `https://drive.google.com/uc?export=download&id=${fileId}&authuser=${authId}`;
@@ -157,87 +161,22 @@ const ViewAssignment = () => {
     }
   };
 
-
-  // Download solved assignment handler
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    try {
-      const response = await fetch(`/api/assignments/${assignmentId}/download`, {
-        method: 'GET',
-        headers: { 'Cache-Control': 'no-cache' },
-      });
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = assignment?.originalName ? `solved_${assignment.originalName}` : 'solved_assignment.docx';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-    } catch (err) {
-      alert('Download failed. Please try again.');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   if (!assignment) {
     return (
       <div className="min-h-screen bg-background p-6">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Assignment not found</CardTitle>
-          </CardHeader>
-        </Card>
+        <AlertTriangleGlobal message="Assignment not found" />
       </div>
     );
   }
 
-  const formatDueDate = () => {
-    if (!assignment.dueDate) return null;
-    const date = new Date(
-      assignment.dueDate.year,
-      assignment.dueDate.month - 1,
-      assignment.dueDate.day
-    );
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+
+  const formatDueTime = (due_time: { hours: number; minutes: number }) => {
+    if (!due_time) return null;
+    return `${due_time.hours}:${due_time.minutes.toString().padStart(2, '0')}`;
   };
 
-  const formatDueTime = () => {
-    if (!assignment.dueTime) return null;
-    return `${assignment.dueTime.hours}:${assignment.dueTime.minutes.toString().padStart(2, '0')}`;
-  };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'TURNED_IN': return 'default';
-      case 'RETURNED': return 'secondary';
-      case 'NEW':
-      case 'CREATED': return 'outline';
-      default: return 'secondary';
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'TURNED_IN': return 'Submitted';
-      case 'RETURNED': return 'Graded';
-      case 'NEW':
-      case 'CREATED': return 'Assigned';
-      default: return status;
-    }
-  };
 
   // Fix: Check submission state correctly
   const isSubmitted = assignment.submissionState === 'TURNED_IN' || assignment.submissionState === 'RETURNED';
@@ -278,12 +217,12 @@ const ViewAssignment = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-medium">Due {formatDueDate()}</span>
+                        <span className="font-medium">Due {formatDueDate(assignment.dueDate)}</span>
                       </div>
                       {assignment.dueTime && (
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span>{formatDueTime()}</span>
+                          <span>{formatDueTime(assignment.dueTime)}</span>
                         </div>
                       )}
                     </div>
@@ -342,22 +281,12 @@ const ViewAssignment = () => {
                   <HashLoader color="#a855f7" size={48} />
                 </div>
               ) : metadata?.status === 'solved' && metadata?.hasSolvedFile ? (
-                <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md transition-colors ${isDownloading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white ml-2`}
-                >
-                  {isDownloading ? (
-                    <>
-                      <span className="inline-block w-4 h-4 bborder-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
-                      <span className="mr-2">Download Solution</span>
-                    </>
-                  )}
-                </button>
+                <DownloadButton
+                  filename={`${session?.user?.email?.split('@')[0]}_${assignment.title}`}
+                  assignmentId={assignmentId as string}
+                  assignment={assignment}
+                  className="ml-2"
+                />
               ) : (
                 <div>
                   <div
@@ -465,7 +394,6 @@ const ViewAssignment = () => {
                             }}
                             variant="outline"
                             size="sm"
-                            disabled={isDownloading}
                           >
                             <DownloadIcon className="w-4 h-4" />
                             <span className="hidden md:inline">Download</span>
