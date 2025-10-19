@@ -46,13 +46,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <MaterialPreviewModal />
-
+      <Header />
       {/* Mobile Layout - Only show on mobile screens */}
       <div className="md:hidden">
         <SidebarProvider defaultOpen={false}>
           <AppSidebar />
           <main className="flex-1">
-            <Header />
             <SidebarTrigger className="absolute top-18 left-2 z-50 size-9" />
             <div className="h-[calc(100vh-70px)]">
               <div className="h-full overflow-auto relative">
@@ -66,7 +65,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* Desktop Layout - Only show on desktop screens */}
       <div className="hidden md:block">
         <main>
-          <Header />
           <div className="h-[calc(100vh-70px)]">
             <ResizablePanelGroup direction="horizontal">
               {/* Sidebar Panel - Always present but conditionally sized */}
