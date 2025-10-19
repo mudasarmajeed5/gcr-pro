@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {  GraduationCap, LogOut } from "lucide-react"
+import { GraduationCap, LogOut } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
 import GlobalSearch from "./GlobalSearch"
 import { FaGithub, FaStar } from "react-icons/fa"
@@ -43,13 +43,13 @@ export default function Header() {
             GCR{" "}
             <span className="relative text-foreground/70">Pro</span>
             <span className="text-[9px] sm:text-[10px] font-medium absolute -right-7 bottom-0">
-              v1.0.0
+              v1.10
             </span>
           </span>
         </Link>
 
-        {/* Center: Search (hide on very small screens) */}
-        <div className="hidden md:flex flex-1 justify-center px-4">
+        {/* Center: Search (single instance across breakpoints) */}
+        <div className="flex flex-1 justify-center px-4">
           <GlobalSearch />
         </div>
 
@@ -74,7 +74,7 @@ export default function Header() {
             </Link>
           </Button>
           <ModeToggle />
-          <PWAInstallButton/>
+          <PWAInstallButton />
 
           {/* Profile Dropdown */}
           <DropdownMenu>
@@ -106,10 +106,7 @@ export default function Header() {
 
       </div>
 
-      {/* Mobile-only Search below header */}
-      <div className="px-4 -mt-2 py-4 md:hidden">
-        <GlobalSearch />
-      </div>
+      {/* Note: Removed duplicate mobile-only GlobalSearch to prevent multiple key listeners */}
     </header>
 
   )

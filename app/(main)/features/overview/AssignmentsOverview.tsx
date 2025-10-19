@@ -46,7 +46,6 @@ export default function AssignmentsOverview() {
     }
   };
   const initalizeSettings = async () => {
-    console.log("Function called")
     if(isLoaded){
       console.log("Returning cause data is loaded")
       return;

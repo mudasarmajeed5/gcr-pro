@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 "use client"
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, BookOpen, FileText, Calendar } from 'lucide-react'
 import Fuse from 'fuse.js'
@@ -21,7 +21,7 @@ import GlobalPreviewMaterial from './GlobalPreviewMaterial'
 const GlobalSearch = () => {
     const [open, setOpen] = useState(false)
     const [previewFile, setPreviewFile] = useState<{ url: string, title: string } | null>(null)
-    const router = useRouter()
+    const router = useRouter();
 
     // Get data from the store
     const { courses, assignments, materials } = useClassroomStore()
@@ -101,11 +101,6 @@ const GlobalSearch = () => {
         }
     }
 
-    // Close the preview modal
-    const closePreview = () => {
-        setPreviewFile(null);
-    }
-
     // Search function
     const performSearch = (query: string) => {
         if (!query.trim()) return { courses: [], assignments: [], materials: [] }
@@ -122,7 +117,14 @@ const GlobalSearch = () => {
     }
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
-            if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+            const target = e.target as HTMLElement | null
+            const isEditable = !!target && (
+                target.isContentEditable ||
+                ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+            )
+            if (isEditable) return
+
+            if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault()
                 setOpen((open) => !open)
             }
