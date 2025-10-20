@@ -9,7 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Material } from "@/types/all-data";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Youtube, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon, DownloadIcon } from "lucide-react";
+import {FaYoutube} from "react-icons/fa"
+import { FileText, Calendar, Clock, User, BookOpen, ArrowLeft, LinkIcon, DownloadIcon } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -431,7 +432,8 @@ const ViewAssignment = () => {
                           className="flex items-center gap-3 p-3 sm:p-4 text-foreground hover:text-primary min-h-[60px]"
                         >
                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Youtube className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                            <FaYoutube className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                            
                           </div>
                           <div className="flex-1 min-w-0 pr-2">
                             <p className="font-medium text-sm sm:text-base line-clamp-2">
