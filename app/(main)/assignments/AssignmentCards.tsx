@@ -51,6 +51,9 @@ const getStatusBadge = (assignment: any, filter: any) => {
     return null;
 }
 
+// Memoize the badge getter to prevent recalculation
+const memoizedGetStatusBadge = (assignment: any, filter: any) => getStatusBadge(assignment, filter);
+
 const AssignmentCardsContent = ({ assignment, filter }: AssignmentCardsProps) => {
 
     return (
@@ -67,7 +70,7 @@ const AssignmentCardsContent = ({ assignment, filter }: AssignmentCardsProps) =>
                         </CardDescription>
                     </div>
                     <div className="flex-shrink-0">
-                        {getStatusBadge(assignment, filter)}
+                        {memoizedGetStatusBadge(assignment, filter)}
                     </div>
                 </div>
             </CardHeader>

@@ -251,7 +251,7 @@ const AssignmentsContent = () => {
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredData.assignments.map((assignment) => (
-                        <Link key={assignment.id} href={`/assignments/${assignment.id}`} className="block h-full">
+                        <Link key={`${filter}-${assignment.id}`} href={`/assignments/${assignment.id}`} className="block h-full">
                             <AssignmentCards assignment={assignment} filter={filter} />
                         </Link>
                     ))}

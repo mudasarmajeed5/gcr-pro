@@ -41,10 +41,8 @@ export default function Header() {
           <GraduationCap className="sm:size-6 size-9 text-foreground" />
           <span>
             GCR{" "}
-            <span className="relative text-foreground/70">Pro</span>
-            <span className="text-[9px] sm:text-[10px] font-medium absolute -right-7 bottom-0">
-              v1.10
-            </span>
+            <span className="relative text-foreground/70 hidden md:inline">Pro</span>
+            
           </span>
         </Link>
 
