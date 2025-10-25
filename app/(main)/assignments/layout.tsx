@@ -4,22 +4,22 @@ import { useSession } from 'next-auth/react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CheckCircle, XCircle, Clock, BookOpen } from 'lucide-react'
-import { ReactNode, useContext, createContext, useState } from 'react'
+import { ReactNode, useContext, createContext, useState, useCallback, useTransition } from 'react'
 import UILoading from '@/components/UILoading'
 
 // Create context for loading state
 const AssignmentsLayoutContext = createContext<{
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
+    isLoading: boolean;
+    setIsLoading: (loading: boolean) => void;
 }>({
-  isLoading: false,
-  setIsLoading: () => {}
+    isLoading: false,
+    setIsLoading: () => { }
 });
 
 export const useAssignmentsLayout = () => useContext(AssignmentsLayoutContext);
 
 interface AssignmentsLayoutProps {
-  children: ReactNode;
+    children: ReactNode;
 }
 
 const AssignmentsLayoutContent = ({ children }: AssignmentsLayoutProps) => {
@@ -27,14 +27,19 @@ const AssignmentsLayoutContent = ({ children }: AssignmentsLayoutProps) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
+    const [isPending, startTransition] = useTransition();
     const filter = searchParams.get('filter') || 'graded';
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleFilterChange = (newFilter: string) => {
-        router.push(`/assignments?filter=${newFilter}`);
-    }
+    // Use useTransition to keep UI responsive during navigation
+    const handleFilterChange = useCallback((newFilter: string) => {
+        startTransition(() => {
+            router.push(`/assignments?filter=${newFilter}`);
+        });
+    }, [router]);
 
     const showHeader = pathname === '/assignments';
+    const isNavigating = isPending || isLoading;
 
     if (status === "loading" || status === "unauthenticated") {
         return <div>{children}</div>;
@@ -47,33 +52,33 @@ const AssignmentsLayoutContent = ({ children }: AssignmentsLayoutProps) => {
                     <div className="mb-6">
                         <Tabs value={filter} onValueChange={handleFilterChange} className="w-full">
                             <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
-                                <TabsTrigger 
-                                    value="graded" 
-                                    disabled={isLoading}
+                                <TabsTrigger
+                                    value="graded"
+                                    disabled={isNavigating}
                                     className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <CheckCircle className="h-4 w-4" />
                                     <span className="hidden sm:inline">Graded</span>
                                 </TabsTrigger>
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="turnedIn"
-                                    disabled={isLoading}
+                                    disabled={isNavigating}
                                     className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <BookOpen className="h-4 w-4" />
                                     <span className="hidden sm:inline">Turned In</span>
                                 </TabsTrigger>
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="unsubmitted"
-                                    disabled={isLoading}
+                                    disabled={isNavigating}
                                     className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Clock className="h-4 w-4" />
                                     <span className="hidden sm:inline">Pending</span>
                                 </TabsTrigger>
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="missed"
-                                    disabled={isLoading}
+                                    disabled={isNavigating}
                                     className="data-[state=active]:bg-red-100 data-[state=active]:text-red-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <XCircle className="h-4 w-4" />

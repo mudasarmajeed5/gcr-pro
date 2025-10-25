@@ -16,8 +16,12 @@ import { useClassroomStore } from "@/store/classroom-store"
 import AssignmentCards from './AssignmentCards'
 import UILoading from '@/components/UILoading'
 
-// Helper functions
+// Helper functions - Memoized to avoid recalculation
+const getDaysUntilDueCache = new Map<string, number>();
 const getDaysUntilDue = (assignment: any): number => {
+    const key = `${assignment.id}`;
+    if (getDaysUntilDueCache.has(key)) return getDaysUntilDueCache.get(key)!;
+
     if (!assignment.dueDate) return -1;
 
     const dueDate = new Date(
@@ -35,7 +39,9 @@ const getDaysUntilDue = (assignment: any): number => {
 
     const now = new Date();
     const diffTime = dueDate.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const result = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    getDaysUntilDueCache.set(key, result);
+    return result;
 };
 
 const getDaysOverdue = (assignment: any): number => {
@@ -63,30 +69,21 @@ const AssignmentsContent = () => {
     const filteredData = useMemo(() => {
         if (!assignments || assignments.length === 0) return { assignments: [], count: 0 };
 
-        // Build a course lookup map once (O(courses)) so we don't scan courses for every assignment
         const courseMap = new Map<string, any>();
         for (const c of courses) courseMap.set(c.id, c);
 
         const filteredAssignments: any[] = [];
 
         for (const assignment of assignments) {
-            const course = courseMap.get(assignment.courseId);
             const submission = assignment.submission;
             const isOverdue = assignment.isOverdue;
-
-            const assignmentWithCourse = {
-                ...assignment,
-                courseName: course?.name || 'Unknown Course',
-                maxPoints: assignment.maxPoints || 0,
-                dueDate: assignment.dueDate,
-                dueTime: assignment.dueTime
-            };
 
             switch (filter) {
                 case "graded":
                     if (submission?.assignedGrade !== undefined && submission?.assignedGrade !== null) {
                         filteredAssignments.push({
-                            ...assignmentWithCourse,
+                            ...assignment,
+                            courseName: courseMap.get(assignment.courseId)?.name || 'Unknown Course',
                             obtainedMarks: submission.assignedGrade,
                             totalMarks: assignment.maxPoints || 0,
                             submissionState: submission.state,
@@ -98,7 +95,8 @@ const AssignmentsContent = () => {
                 case "turnedIn":
                     if (submission?.state === 'TURNED_IN' || submission?.state === 'RETURNED') {
                         filteredAssignments.push({
-                            ...assignmentWithCourse,
+                            ...assignment,
+                            courseName: courseMap.get(assignment.courseId)?.name || 'Unknown Course',
                             obtainedMarks: submission.assignedGrade || null,
                             totalMarks: assignment.maxPoints || 0,
                             submissionState: submission.state,
@@ -111,7 +109,8 @@ const AssignmentsContent = () => {
                 case "unsubmitted":
                     if ((!submission || submission.state !== 'TURNED_IN') && !isOverdue) {
                         filteredAssignments.push({
-                            ...assignmentWithCourse,
+                            ...assignment,
+                            courseName: courseMap.get(assignment.courseId)?.name || 'Unknown Course',
                             totalMarks: assignment.maxPoints || 0,
                             submissionState: submission?.state || 'NOT_SUBMITTED',
                             daysLeft: getDaysUntilDue(assignment)
@@ -122,7 +121,8 @@ const AssignmentsContent = () => {
                 case "missed":
                     if ((!submission || submission.state !== 'TURNED_IN') && isOverdue && !submission?.assignedGrade) {
                         filteredAssignments.push({
-                            ...assignmentWithCourse,
+                            ...assignment,
+                            courseName: courseMap.get(assignment.courseId)?.name || 'Unknown Course',
                             totalMarks: assignment.maxPoints || 0,
                             submissionState: submission?.state || 'NOT_SUBMITTED',
                             daysOverdue: getDaysOverdue(assignment)
