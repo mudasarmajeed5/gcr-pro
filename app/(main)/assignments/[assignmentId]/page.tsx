@@ -197,7 +197,7 @@ const ViewAssignment = () => {
   const isSubmitted = assignment.submissionState === 'TURNED_IN' || assignment.submissionState === 'RETURNED';
   
   // Compute due time text once for rendering
-  const dueTimeText = assignment.dueTime ? formatDueTime(assignment.dueTime) : null;
+  const dueTimeText = formatDueTime(assignment.dueTime);
 
   return (
     <div className="min-h-screen bg-background">
