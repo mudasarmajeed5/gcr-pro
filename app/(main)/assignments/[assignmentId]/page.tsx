@@ -171,9 +171,16 @@ const ViewAssignment = () => {
   }
 
 
-  const formatDueTime = (due_time: { hours: number; minutes: number }) => {
+  // Format due_time safely — some assignments may omit hours or minutes
+  const formatDueTime = (due_time?: { hours?: number; minutes?: number } | null): string | null => {
     if (!due_time) return null;
-    return `${due_time.hours}:${due_time.minutes.toString().padStart(2, '0')}`;
+
+    // Defensive defaults if hours/minutes are missing or not numbers
+    const hours = typeof due_time.hours === 'number' ? due_time.hours : 0;
+    const minutes = typeof due_time.minutes === 'number' ? due_time.minutes : 0;
+
+    // Ensure numbers are strings and minutes are padded
+    return `${String(hours)}:${String(minutes).padStart(2, '0')}`;
   };
 
 
@@ -220,12 +227,20 @@ const ViewAssignment = () => {
                         <Calendar className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">Due {formatDueDate(assignment.dueDate)}</span>
                       </div>
-                      {assignment.dueTime && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span>{formatDueTime(assignment.dueTime)}</span>
-                        </div>
-                      )}
+                      {assignment.dueTime && (() => {
+                        const dueTimeText = formatDueTime(assignment.dueTime);
+                        return dueTimeText ? (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4 flex-shrink-0" />
+                            <span>{dueTimeText}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-muted-foreground">No due time</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                   {assignment.maxPoints && (
