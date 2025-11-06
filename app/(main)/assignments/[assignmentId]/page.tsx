@@ -188,6 +188,9 @@ const ViewAssignment = () => {
 
   // Fix: Check submission state correctly
   const isSubmitted = assignment.submissionState === 'TURNED_IN' || assignment.submissionState === 'RETURNED';
+  
+  // Compute due time text once for rendering
+  const dueTimeText = assignment.dueTime ? formatDueTime(assignment.dueTime) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -227,20 +230,14 @@ const ViewAssignment = () => {
                         <Calendar className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">Due {formatDueDate(assignment.dueDate)}</span>
                       </div>
-                      {assignment.dueTime && (() => {
-                        const dueTimeText = formatDueTime(assignment.dueTime);
-                        return dueTimeText ? (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 flex-shrink-0" />
-                            <span>{dueTimeText}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-muted-foreground">No due time</span>
-                          </div>
-                        );
-                      })()}
+                      {assignment.dueTime && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 flex-shrink-0" />
+                          <span className={dueTimeText ? "" : "text-muted-foreground"}>
+                            {dueTimeText || "No due time"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                   {assignment.maxPoints && (
