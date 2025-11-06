@@ -171,9 +171,23 @@ const ViewAssignment = () => {
   }
 
 
-  const formatDueTime = (due_time: { hours: number; minutes: number }) => {
+  // Format due_time safely — some assignments may omit hours or minutes
+  const formatDueTime = (due_time?: { hours?: number; minutes?: number } | null): string | null => {
     if (!due_time) return null;
-    return `${due_time.hours}:${due_time.minutes.toString().padStart(2, '0')}`;
+
+    // Check if the object has any valid numeric properties
+    const hasHours = typeof due_time.hours === 'number';
+    const hasMinutes = typeof due_time.minutes === 'number';
+    
+    // If both are missing, treat as invalid/incomplete data
+    if (!hasHours && !hasMinutes) return null;
+
+    // Defensive defaults if hours/minutes are missing or not numbers
+    const hours = hasHours ? due_time.hours : 0;
+    const minutes = hasMinutes ? due_time.minutes : 0;
+
+    // Ensure numbers are strings and minutes are padded
+    return `${String(hours)}:${String(minutes).padStart(2, '0')}`;
   };
 
 
@@ -181,6 +195,9 @@ const ViewAssignment = () => {
 
   // Fix: Check submission state correctly
   const isSubmitted = assignment.submissionState === 'TURNED_IN' || assignment.submissionState === 'RETURNED';
+  
+  // Compute due time text once for rendering
+  const dueTimeText = formatDueTime(assignment.dueTime);
 
   return (
     <div className="min-h-screen bg-background">
@@ -223,7 +240,9 @@ const ViewAssignment = () => {
                       {assignment.dueTime && (
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span>{formatDueTime(assignment.dueTime)}</span>
+                          <span className={dueTimeText ? "" : "text-muted-foreground"}>
+                            {dueTimeText || "No due time"}
+                          </span>
                         </div>
                       )}
                     </div>
