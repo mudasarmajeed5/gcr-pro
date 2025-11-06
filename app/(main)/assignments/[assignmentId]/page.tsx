@@ -175,9 +175,16 @@ const ViewAssignment = () => {
   const formatDueTime = (due_time?: { hours?: number; minutes?: number } | null): string | null => {
     if (!due_time) return null;
 
+    // Check if the object has any valid numeric properties
+    const hasHours = typeof due_time.hours === 'number';
+    const hasMinutes = typeof due_time.minutes === 'number';
+    
+    // If both are missing, treat as invalid/incomplete data
+    if (!hasHours && !hasMinutes) return null;
+
     // Defensive defaults if hours/minutes are missing or not numbers
-    const hours = typeof due_time.hours === 'number' ? due_time.hours : 0;
-    const minutes = typeof due_time.minutes === 'number' ? due_time.minutes : 0;
+    const hours = hasHours ? due_time.hours : 0;
+    const minutes = hasMinutes ? due_time.minutes : 0;
 
     // Ensure numbers are strings and minutes are padded
     return `${String(hours)}:${String(minutes).padStart(2, '0')}`;
