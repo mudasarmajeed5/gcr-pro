@@ -4,7 +4,8 @@ import {
     GraduationCap,
     MailIcon,
     SettingsIcon,
-    Sparkle
+    Sparkle,
+    BrainCircuit
 } from 'lucide-react'
 export const sidebarItems = [   
     {
@@ -26,6 +27,11 @@ export const sidebarItems = [
         href: '/send-email',
         icon: MailIcon,
         label: 'Send Email'
+    },
+    {
+        href: '/gcr-ai',
+        icon: BrainCircuit,
+        label: 'GCR AI'
     },
     {
         href: '/settings',
