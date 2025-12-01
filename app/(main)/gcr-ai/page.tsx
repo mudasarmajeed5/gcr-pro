@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ChevronDown, Upload, FileText, X, Sparkles, HelpCircle, Loader2 } from 'lucide-react'
 import UILoading from '@/components/UILoading'
+import { toast } from 'sonner'
 
 interface UploadedFile {
     id: string
@@ -52,7 +53,7 @@ export default function GcrAiPage() {
         const newFiles: UploadedFile[] = Array.from(files)
             .slice(0, remainingSlots)
             .map(file => ({
-                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
                 name: file.name,
                 file
             }))
@@ -145,7 +146,7 @@ export default function GcrAiPage() {
     }, [selectedCourseId, courseFiles])
 
     const generateQuiz = useCallback(() => {
-        // Empty implementation for now
+        toast.info('Quiz generation coming soon!')
     }, [])
 
     if (isLoading) return <UILoading />
@@ -212,7 +213,7 @@ export default function GcrAiPage() {
                                 id="file-upload"
                                 className="hidden"
                                 multiple
-                                accept=".pdf,.doc,.docx,.txt"
+                                accept=".txt,.md,.csv,text/plain,text/markdown,text/csv"
                                 onChange={(e) => handleFileChange(e.target.files)}
                                 disabled={currentFiles.length >= 3}
                             />
@@ -225,7 +226,7 @@ export default function GcrAiPage() {
                                     Drag and drop files here, or click to browse
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {currentFiles.length}/3 files uploaded
+                                    Supported: .txt, .md, .csv • {currentFiles.length}/3 files uploaded
                                 </p>
                             </label>
                         </div>
@@ -291,20 +292,8 @@ export default function GcrAiPage() {
                         <CardDescription>AI-generated summary of your material</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <div
-                                dangerouslySetInnerHTML={{
-                                    __html: activeSummary
-                                        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                                        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                                        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                                        .replace(/^\- (.*$)/gim, '<li>$1</li>')
-                                        .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-                                        .replace(/\n/g, '<br />')
-                                }}
-                            />
+                        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                            {activeSummary}
                         </div>
                     </CardContent>
                 </Card>
