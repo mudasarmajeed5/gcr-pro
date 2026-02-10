@@ -128,7 +128,7 @@ async function fetchClassroomData(
         try {
             const [assignmentsResponse, submissionsResponse, announcementsResponse, materialsResponse, professors] = await Promise.all([
                 fetch(
-                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?courseWorkStates=PUBLISHED&fields=courseWork(id,title,dueDate,dueTime,maxPoints,materials)&pageSize=1000`,
                     { headers }
                 ),
                 fetch(
@@ -136,7 +136,7 @@ async function fetchClassroomData(
                     { headers }
                 ),
                 fetch(
-                    `https://classroom.googleapis.com/v1/courses/${course.id}/announcements?fields=announcements(id,text,creationTime,materials)&pageSize=1000`,
+                    `https://classroom.googleapis.com/v1/courses/${course.id}/announcements?announcementStates=PUBLISHED&fields=announcements(id,text,creationTime,materials)&pageSize=1000`,
                     { headers }
                 ),
                 fetch(
@@ -316,18 +316,28 @@ export async function GET(request: Request) {
             'Accept': 'application/json',
         };
 
-        // Fetch courses
-        const coursesResponse = await fetch(
-            "https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE",
-            { headers }
-        );
+        // Fetch all active courses (handles pagination)
+        const courses: Course[] = [];
+        let pageToken: string | undefined;
 
-        if (!coursesResponse.ok) {
-            throw new Error("Failed to fetch courses");
-        }
+        do {
+            const url = new URL("https://classroom.googleapis.com/v1/courses");
+            url.searchParams.set("courseStates", "ACTIVE");
+            url.searchParams.set("studentId", "me");
+            if (pageToken) {
+                url.searchParams.set("pageToken", pageToken);
+            }
 
-        const coursesData = await coursesResponse.json();
-        const courses: Course[] = coursesData.courses || [];
+            const coursesResponse = await fetch(url.toString(), { headers });
+
+            if (!coursesResponse.ok) {
+                throw new Error("Failed to fetch courses");
+            }
+
+            const coursesData = await coursesResponse.json();
+            courses.push(...(coursesData.courses || []));
+            pageToken = coursesData.nextPageToken;
+        } while (pageToken);
 
         // Fetch and process all classroom data
         const classroomData = await fetchClassroomData(headers, courses);
