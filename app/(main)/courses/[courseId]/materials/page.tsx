@@ -26,7 +26,8 @@ const Materials = () => {
 
   const onDownloadAll = () => {
     const fileIds = courseMaterials
-      .map((material) => material.materials?.[0]?.driveFile?.driveFile?.id)
+      .flatMap((material) => material.materials ?? [])
+      .map((attachment) => attachment.driveFile?.driveFile?.id)
       .filter((id): id is string => Boolean(id));
 
     if (!fileIds.length) {
