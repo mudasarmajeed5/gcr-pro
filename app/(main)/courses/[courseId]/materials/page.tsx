@@ -26,7 +26,9 @@ const Materials = () => {
 
   const onDownloadAll = () => {
     const fileIds = courseMaterials
-      .map((material) => material.materials?.[0]?.driveFile?.driveFile?.id)
+      .flatMap((material) =>
+        material.materials?.map((m) => m.driveFile?.driveFile?.id) ?? []
+      )
       .filter((id): id is string => Boolean(id));
 
     if (!fileIds.length) {
@@ -40,7 +42,6 @@ const Materials = () => {
 
     const downloadNext = () => {
       if (current >= total) {
-        // Dismiss the loading toast and show success
         toast.dismiss(toastId);
         toast.success("Done!");
         return;
@@ -48,12 +49,12 @@ const Materials = () => {
 
       const fileId = fileIds[current];
 
-      // Update the existing toast with new message
       toast.loading(`⬇️ Downloading file ${current + 1} of ${total}...`, {
         id: toastId,
       });
 
       downloadFile(fileId);
+
       current++;
       setTimeout(downloadNext, 7000);
     };
