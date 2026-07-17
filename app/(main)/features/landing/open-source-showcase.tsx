@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Github, Star, GitFork, Users, Code } from "lucide-react"
+import { GitPullRequest, Star, GitFork, Users, Code } from "lucide-react"
 import { motion } from "framer-motion"
 import useGetRepository from "./hooks/use-get-repository"
 
@@ -73,7 +73,7 @@ export function OpenSourceShowcase() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                    <Github className="w-6 h-6 text-white" />
+                    <GitPullRequest className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <CardTitle className="text-xl">GCR PRO Repository</CardTitle>
@@ -148,7 +148,7 @@ export function OpenSourceShowcase() {
 
                 <a href="https://github.com/mudasarmajeed5/gcr-pro">
                   <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-                    <Github className="w-4 h-4 mr-2" />
+                    <GitPullRequest className="w-4 h-4 mr-2" />
                     View on GitHub
                   </Button>
                 </a>
@@ -205,7 +205,7 @@ export function OpenSourceShowcase() {
 
               <a href="https://github.com/mudasarmajeed5/gcr-pro/issues/new" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="hover:bg-primary/5 bg-transparent hover:text-accent">
-                  <Github className="w-5 h-5 mr-2" />
+                  <GitPullRequest className="w-5 h-5 mr-2" />
                   Create Issue
                 </Button>
               </a>
