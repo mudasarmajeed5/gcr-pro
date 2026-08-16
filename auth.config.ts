@@ -4,7 +4,7 @@ declare module "next-auth" {
   interface Session {
     accessToken?: string;
     error?: string;
-    id?: string
+    id?: string;
     // optional theme id saved in user settings
     user?: {
       id?: string;
@@ -12,14 +12,14 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-    }
+    };
   }
 }
-export default {
+const authConfig = {
   providers: [
     GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       authorization: {
         params: {
           scope: [
@@ -43,7 +43,7 @@ export default {
     async signIn({ user, account, profile }) {
       // Only allow sign-in from @students.au.edu.pk email addresses
       const email = user.email || profile?.email;
-      if (!email || !email.endsWith('@students.au.edu.pk')) {
+      if (!email || !email.endsWith("@students.au.edu.pk")) {
         return false; // Deny sign-in
       }
       return true; // Allow sign-in
@@ -55,7 +55,10 @@ export default {
         token.refreshToken = account.refresh_token;
         token.expiresAt = account.expires_at;
       }
-      if (token.expiresAt && Date.now() < (token.expiresAt as number) * 1000 - 300000) {
+      if (
+        token.expiresAt &&
+        Date.now() < (token.expiresAt as number) * 1000 - 300000
+      ) {
         return token;
       }
 
@@ -84,7 +87,8 @@ export default {
           return {
             ...token,
             accessToken: refreshedTokens.access_token,
-            expiresAt: Math.floor(Date.now() / 1000) + refreshedTokens.expires_in,
+            expiresAt:
+              Math.floor(Date.now() / 1000) + refreshedTokens.expires_in,
             refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
           };
         } catch (error) {
@@ -99,16 +103,17 @@ export default {
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
       // attach id and themeId from DB if available
-      const userId = token.sub as string | undefined
-      session.user = session.user || {}
+      const userId = token.sub as string | undefined;
+      session.user = session.user || {};
       if (userId) {
-        session.user.id = userId
+        session.user.id = userId;
         // NOTE: DB lookup removed here to avoid importing server-only modules in auth callback
         // Theme will be applied by the client ThemeProvider which can fetch settings server-side.
       }
 
       return session;
     },
-
   },
 } satisfies NextAuthConfig;
+
+export default authConfig;

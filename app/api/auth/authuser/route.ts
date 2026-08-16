@@ -1,55 +1,71 @@
 // app/api/authuser/route.js
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import UserSettings from '@/models/UserSettings'
-import { connectDB } from '@/lib/connectDB'
-import { auth } from '@/auth'
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import UserSettings from "@/models/UserSettings";
+import { connectDB } from "@/lib/connectDB";
+import { auth } from "@/auth";
 
 export async function GET() {
-  await connectDB()
-  const session = await auth()
-  const userId = session?.user?.id
-  const cookieStore = await cookies()
-  const authuser = cookieStore.get('authuser')?.value
-
-  let updatedUser
-
-  if (authuser) {
-    // ✅ First login (or when cookie is available) → persist it
-    updatedUser = await UserSettings.findOneAndUpdate(
-      { userId },
-      { authUserId: parseInt(authuser) },
-      { new: true, upsert: true }
-    )
-  } else {
-    updatedUser = await UserSettings.findOne({ userId })
-  }
-
-  if (!updatedUser) {
-    return NextResponse.json(
-      { error: 'User settings not found' },
-      { status: 404 }
-    )
-  }
-
-  const themeId = updatedUser.themeId ?? 'neutral'
-
-  const res = NextResponse.json({
-    authUserId: updatedUser.authUserId ?? null,
-    themeId,
-  })
-
-  // set a cookie so the theme is available on subsequent requests (not httpOnly so client can read if needed)
   try {
-    res.cookies.set('themeId', String(themeId), {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      sameSite: 'lax',
-    })
-  } catch (e) {
-    // ignore if cookie can't be set for some reason
-    console.error('Unable to set themeId cookie', e)
-  }
+    const session = await auth();
+    const userId = session?.user?.id;
 
-  return res
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized", authUserId: null, themeId: "neutral" },
+        { status: 401 },
+      );
+    }
+
+    await connectDB();
+    const cookieStore = await cookies();
+    const authuser = cookieStore.get("authuser")?.value;
+
+    const parsedAuthUser = authuser ? Number.parseInt(authuser, 10) : null;
+    const isValidAuthUser = Number.isFinite(parsedAuthUser);
+
+    // Ensure a settings document always exists for an authenticated user.
+    const updatedUser = await UserSettings.findOneAndUpdate(
+      { userId },
+      {
+        ...(isValidAuthUser ? { authUserId: parsedAuthUser } : {}),
+        $setOnInsert: {
+          userId,
+          authUserId: 0,
+          themeId: "neutral",
+        },
+      },
+      { new: true, upsert: true },
+    );
+
+    const themeId = updatedUser.themeId ?? "neutral";
+
+    const res = NextResponse.json({
+      authUserId: updatedUser.authUserId ?? null,
+      themeId,
+    });
+
+    // Keep theme in a cookie for quick client-side reads.
+    try {
+      res.cookies.set("themeId", String(themeId), {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    } catch (e) {
+      console.error("Unable to set themeId cookie", e);
+    }
+
+    return res;
+  } catch (error) {
+    console.error("authuser route failed", error);
+    return NextResponse.json(
+      {
+        error: "Auth user service unavailable",
+        authUserId: null,
+        themeId: "neutral",
+      },
+      { status: 503 },
+    );
+  }
 }

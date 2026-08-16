@@ -1,31 +1,39 @@
-'use client'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
-import { Button } from '@/components/ui/button'
-import { PanelLeft, PanelRight } from 'lucide-react'
-import ProfessorList from './ProfessorsList'
-import EmailComposer from './EmailComposer'
-import { useEffect, useState } from 'react'
-import { useClassroomStore } from '@/store/classroom-store'
-import UILoading from '@/components/UILoading'
+"use client";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { PanelLeft, PanelRight } from "lucide-react";
+import ProfessorList from "./ProfessorsList";
+import EmailComposer from "./EmailComposer";
+import { useEffect, useState } from "react";
+import { useClassroomStore } from "@/store/classroom-store";
+import UILoading from "@/components/UILoading";
 import {
   Sidebar,
   SidebarContent,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 interface Professor {
-  id: string
-  name: string
-  email: string
-  courseName: string
-  avatar?: string
+  id: string;
+  name: string;
+  email: string;
+  courseName: string;
+  avatar?: string;
 }
 
-function ProfessorSidebar({ professors, selectedProfessor, onSelectProfessor }: {
-  professors: Professor[]
-  selectedProfessor: Professor | null
-  onSelectProfessor: (prof: Professor | null) => void
+function ProfessorSidebar({
+  professors,
+  selectedProfessor,
+  onSelectProfessor,
+}: {
+  professors: Professor[];
+  selectedProfessor: Professor | null;
+  onSelectProfessor: (prof: Professor | null) => void;
 }) {
   return (
     <Sidebar collapsible="offcanvas" side="right">
@@ -37,33 +45,35 @@ function ProfessorSidebar({ professors, selectedProfessor, onSelectProfessor }: 
         />
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
 
 export default function SendEmail() {
-  const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null)
-  const [professorListOpen, setProfessorListOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
+  const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(
+    null,
+  );
+  const [professorListOpen, setProfessorListOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Get professors from Zustand store
   const { professors, isLoading, fetchClassroomData } = useClassroomStore();
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+      setIsMobile(window.innerWidth < 768);
+    };
 
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Fetch data from store
   useEffect(() => {
     fetchClassroomData();
   }, [fetchClassroomData]);
 
-  if (isLoading) return <UILoading />
+  if (isLoading) return <UILoading />;
 
   if (isMobile) {
     return (
@@ -80,13 +90,17 @@ export default function SendEmail() {
           onSelectProfessor={setSelectedProfessor}
         />
       </SidebarProvider>
-    )
+    );
   }
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="min-h-[500px] rounded-lg border">
+    <ResizablePanelGroup
+      key={professorListOpen ? "professor-open" : "professor-closed"}
+      orientation="horizontal"
+      className="min-h-[500px] rounded-lg border"
+    >
       <ResizablePanel
-        defaultSize={professorListOpen ? 60 : 100}
+        defaultSize={professorListOpen ? "60%" : "100%"}
         className="relative"
       >
         <EmailComposer selectedProfessor={selectedProfessor} />
@@ -109,9 +123,9 @@ export default function SendEmail() {
           <ResizableHandle withHandle />
 
           <ResizablePanel
-            defaultSize={30}
-            minSize={25}
-            maxSize={40}
+            defaultSize="30%"
+            minSize="25%"
+            maxSize="40%"
             className="relative"
           >
             <ProfessorList
@@ -133,5 +147,5 @@ export default function SendEmail() {
         </>
       )}
     </ResizablePanelGroup>
-  )
+  );
 }

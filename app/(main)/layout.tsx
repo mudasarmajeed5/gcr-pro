@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Header from "@/components/Header"
-import DashboardSidebar from "@/components/DashboardSidebar"
+import { useState } from "react";
+import Header from "@/components/Header";
+import DashboardSidebar from "@/components/DashboardSidebar";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { Button } from "@/components/ui/button"
-import { PanelLeft, PanelRight } from "lucide-react"
-import { MaterialPreviewModal } from "@/components/material-preview-modal"
+} from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { PanelLeft, PanelRight } from "lucide-react";
+import { MaterialPreviewModal } from "@/components/material-preview-modal";
 import {
   Sidebar,
   SidebarContent,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { useSession } from "next-auth/react"
-import UILoading from "@/components/UILoading"
+} from "@/components/ui/sidebar";
+import { useSession } from "next-auth/react";
+import UILoading from "@/components/UILoading";
 
 function AppSidebar() {
   return (
@@ -27,19 +27,23 @@ function AppSidebar() {
         <DashboardSidebar />
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { data: session, status } = useSession();
   // Show loading state while checking session
   if (status === "loading") {
-    return <UILoading />
+    return <UILoading />;
   }
 
   if (!session) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Full layout for authenticated users
@@ -54,9 +58,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1">
             <SidebarTrigger className="absolute top-18 left-2 z-50 size-9" />
             <div className="h-[calc(100vh-70px)]">
-              <div className="h-full overflow-auto relative">
-                {children}
-              </div>
+              <div className="h-full overflow-auto relative">{children}</div>
             </div>
           </main>
         </SidebarProvider>
@@ -66,15 +68,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div className="hidden md:block">
         <main>
           <div className="h-[calc(100vh-70px)]">
-            <ResizablePanelGroup direction="horizontal">
+            <ResizablePanelGroup
+              key={sidebarOpen ? "sidebar-open" : "sidebar-closed"}
+              orientation="horizontal"
+            >
               {/* Sidebar Panel - Always present but conditionally sized */}
               <ResizablePanel
-                defaultSize={sidebarOpen ? 20 : 0}
-                minSize={sidebarOpen ? 20 : 0}
-                maxSize={sidebarOpen ? 40 : 0}
+                defaultSize={sidebarOpen ? "20%" : "0%"}
+                minSize={sidebarOpen ? "20%" : "0%"}
+                maxSize={sidebarOpen ? "40%" : "0%"}
                 className="relative border-r"
               >
-                <div className={`h-full ${sidebarOpen ? 'block' : 'hidden'}`}>
+                <div className={`h-full ${sidebarOpen ? "block" : "hidden"}`}>
                   <DashboardSidebar />
 
                   {/* Toggle button when sidebar is open */}
@@ -89,16 +94,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </ResizablePanel>
 
-              <ResizableHandle withHandle className={sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} />
+              <ResizableHandle
+                withHandle
+                className={
+                  sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                }
+              />
 
               {/* Main Content Panel */}
               <ResizablePanel
-                defaultSize={sidebarOpen ? 80 : 100}
+                defaultSize={sidebarOpen ? "80%" : "100%"}
                 className="relative"
               >
-                <div className="h-full overflow-auto">
-                  {children}
-                </div>
+                <div className="h-full overflow-auto">{children}</div>
 
                 {/* Toggle button when sidebar is closed */}
                 {!sidebarOpen && (
@@ -117,5 +125,5 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </main>
       </div>
     </>
-  )
+  );
 }
