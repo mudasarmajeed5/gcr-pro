@@ -70,8 +70,14 @@ export default async function RootLayout({
     try {
       const light = ${JSON.stringify(lightVars)};
       const dark = ${JSON.stringify(darkVars)};
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const vars = prefersDark ? dark : light;
+      let isDark;
+      try {
+        const stored = localStorage.getItem('theme');
+        isDark = stored === 'dark' || (stored !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      } catch (e) {
+        isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+      const vars = isDark ? dark : light;
       const root = document.documentElement;
       for (const k in vars) {
         if (Object.prototype.hasOwnProperty.call(vars, k)) {

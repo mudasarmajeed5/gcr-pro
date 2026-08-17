@@ -92,7 +92,7 @@ export default function Header() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/auth/sign-in" })}
+                onClick={() => signOut({ callbackUrl: "/sign-in" })}
                 className="flex items-center gap-2 text-red-600"
               >
                 <LogOut className="h-4 w-4" />
